@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="lab.zero_one.roundo">
+    package="labs.zero_one.roundo">
 
     <application
         android:allowBackup="true"
@@ -10,7 +10,7 @@
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
         <activity
-            android:name=".MainActivity"
+            android:name="labs.zero_one.roundo.MainActivity"
             android:label="@string/app_name"
             android:screenOrientation="portrait"
             android:theme="@style/AppTheme.NoActionBar">
@@ -20,6 +20,19 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
+        <activity
+            android:name=".PreferenceMainActivity"
+            android:label="@string/pref_main_title"
+            android:screenOrientation="portrait"
+            android:parentActivityName="labs.zero_one.roundo.MainActivity"/>
+
+        <activity
+            android:name=".PreferenceAboutActivity"
+            android:label="@string/pref_about_title"
+            android:screenOrientation="portrait"
+            android:parentActivityName="labs.zero_one.roundo.PreferenceMainActivity"/>
+
     </application>
 
 </manifest>

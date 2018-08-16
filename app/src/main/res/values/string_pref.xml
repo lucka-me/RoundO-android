@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Main Preference -->
+    <string name="pref_main_title">设置</string>
+
+    <string name="pref_category_other_title">其它</string>
+    <string name="pref_about_key">pref_about</string>
+    <string name="pref_about_title">关于</string>
+
+    <!-- About -->
+    <string name="pref_about_class_name">labs.zero_one.roundo.PreferenceAboutActivity</string>
+    <string name="pref_about_summary_category_title">概要</string>
+    <string name="pref_about_summary_version_key">pref_about_summary_version</string>
+    <string name="pref_about_summary_version_title">版本</string>
+    <string name="pref_about_summary_version_summary">%s (%d)</string>
+    <string name="pref_about_summary_github_title">GitHub</string>
+    <string name="pref_about_summary_github_summary">应用源代码</string>
+    <string name="pref_about_summary_github_url">https://github.com/lucka-me/RoundO-android</string>
+
+    <string name="pref_about_developer_category_title">开发者</string>
+    <string name="pref_about_developer_lucka_title">Team Y.Y.Y.Y.A.</string>
+    <string name="pref_about_developer_lucka_summary">网站</string>
+    <string name="pref_about_developer_lucka_url">https://zero-one.space</string>
+</resources>

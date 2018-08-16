@@ -1,4 +1,9 @@
 <resources>
     <string name="app_name">RoundO</string>
-    <string name="action_settings">Settings</string>
+    <string name="package_name">labs.zero_one.roundo</string>
+
+    <!-- Main Menu -->
+    <string name="menu_main_start">开始</string>
+    <string name="menu_main_stop">结束</string>
+    <string name="menu_main_preference">设置</string>
 </resources>

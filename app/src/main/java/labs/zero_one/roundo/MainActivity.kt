@@ -1,5 +1,6 @@
-package lab.zero_one.roundo
+package labs.zero_one.roundo
 
+import android.content.Intent
 import android.os.Bundle
 import android.support.v7.app.AppCompatActivity
 import android.view.Menu
@@ -26,6 +27,23 @@ import kotlinx.android.synthetic.main.activity_main.*
  */
 class MainActivity : AppCompatActivity() {
 
+    /**
+     * 主菜单项
+     *
+     * @param [index] 菜单项位置
+     * @param [id] 菜单项资源 ID
+     *
+     * @property [StartStop] 开始/停止
+     * @property [Preference] 设置
+     *
+     * @author lucka
+     * @since 0.1
+     */
+    private enum class MainMenu(val index: Int, val id: Int) {
+        StartStop(0, R.id.menu_main_start_stop),
+        Preference(1, R.id.menu_main_preference)
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
@@ -38,12 +56,22 @@ class MainActivity : AppCompatActivity() {
         return true
     }
 
+    // Handel the selection on Main Menu
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
-        // Handle action bar item clicks here. The action bar will
-        // automatically handle clicks on the Home/Up button, so long
-        // as you specify a parent activity in AndroidManifest.xml.
+        when (item.itemId) {
+
+            MainMenu.StartStop.id -> {
+
+            }
+
+            MainMenu.Preference.id -> {
+                val intent: Intent = Intent(this, PreferenceMainActivity::class.java)
+                    .apply {  }
+                startActivity(intent)
+            }
+        }
         return when (item.itemId) {
-            R.id.action_settings -> true
+            MainMenu.StartStop.id, MainMenu.Preference.id -> true
             else -> super.onOptionsItemSelected(item)
         }
     }
