@@ -1,6 +1,14 @@
 <h1 align=center>更新日志</h1>
 
 ```markdown
+## [0.1.2] - 2018-08-16
+- 0.1.1(34) -> 0.1.2(62)
+
+### Finished
+- App frame including setup activity
+```
+
+```markdown
 ## [0.1.1] - 2018-08-16
 - 0.1(10) -> 0.1.1(34)
 

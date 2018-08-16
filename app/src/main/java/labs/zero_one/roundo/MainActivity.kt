@@ -5,7 +5,6 @@ import android.os.Bundle
 import android.support.v7.app.AppCompatActivity
 import android.view.Menu
 import android.view.MenuItem
-
 import kotlinx.android.synthetic.main.activity_main.*
 
 /**
@@ -48,6 +47,8 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
         setSupportActionBar(mainToolbar)
+
+
     }
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
@@ -61,7 +62,9 @@ class MainActivity : AppCompatActivity() {
         when (item.itemId) {
 
             MainMenu.StartStop.id -> {
-
+                val intent: Intent = Intent(this, SetupActivity::class.java)
+                    .apply {  }
+                startActivity(intent)
             }
 
             MainMenu.Preference.id -> {

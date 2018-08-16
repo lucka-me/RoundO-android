@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen
+    xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <PreferenceCategory android:title="@string/setup_basic_category_title">
+
+        <EditTextPreference
+            android:title="@string/setup_basic_radius_title"
+            android:summary="@string/setup_basic_radius_summary"
+            android:defaultValue="@string/setup_basic_radius_default"
+            android:inputType="number"
+            android:dialogMessage="@string/setup_basic_radius_summary"
+            android:key="@string/setup_basic_radius_key" />
+
+    </PreferenceCategory>
+
+</PreferenceScreen>

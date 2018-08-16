@@ -2,11 +2,11 @@
 <PreferenceScreen
     xmlns:android="http://schemas.android.com/apk/res/android">
 
-    <PreferenceCategory android:title="@string/pref_category_other_title">
+    <PreferenceCategory android:title="@string/pref_other_category_title">
 
         <Preference
-            android:key="@string/pref_about_key"
-            android:title="@string/pref_about_title"
+            android:key="@string/pref_other_about_key"
+            android:title="@string/pref_other_about_title"
             android:icon="@drawable/ic_pref_other_about">
             <intent
                 android:action="android.intent.action.MAIN"

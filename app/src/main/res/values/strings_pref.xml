@@ -3,11 +3,12 @@
     <!-- Main Preference -->
     <string name="pref_main_title">设置</string>
 
-    <string name="pref_category_other_title">其它</string>
-    <string name="pref_about_key">pref_about</string>
-    <string name="pref_about_title">关于</string>
+    <string name="pref_other_category_title">其它</string>
+    <string name="pref_other_about_key">pref_about</string>
+    <string name="pref_other_about_title">关于</string>
 
     <!-- About -->
+    <string name="pref_about_title">关于</string>
     <string name="pref_about_class_name">labs.zero_one.roundo.PreferenceAboutActivity</string>
     <string name="pref_about_summary_category_title">概要</string>
     <string name="pref_about_summary_version_key">pref_about_summary_version</string>
@@ -21,4 +22,12 @@
     <string name="pref_about_developer_lucka_title">Team Y.Y.Y.Y.A.</string>
     <string name="pref_about_developer_lucka_summary">网站</string>
     <string name="pref_about_developer_lucka_url">https://zero-one.space</string>
+
+    <string name="pref_about_dependency_category_title">依赖组件</string>
+    <string name="pref_about_dependency_prefFix_title">Android Support Preference V7 Fix</string>
+    <string name="pref_about_dependency_prefFix_summary">Fixed preference support library</string>
+    <string name="pref_about_dependency_prefFix_url">https://github.com/Gericop/Android-Support-Preference-V7-Fix</string>
+    <string name="pref_about_dependency_fa_title">FontAwesome</string>
+    <string name="pref_about_dependency_fa_summary">Popular icon set and toolkit</string>
+    <string name="pref_about_dependency_fa_url">https://fontawesome.com/</string>
 </resources>
