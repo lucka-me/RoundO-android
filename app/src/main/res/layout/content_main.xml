@@ -8,13 +8,13 @@
     tools:context=".MainActivity"
     tools:showIn="@layout/activity_main">
 
-    <!--<com.minemap.minemapsdk.maps.MapView
+    <com.minemap.minemapsdk.maps.MapView
         android:id="@+id/mapView"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         app:minemap_apiBaseUrl="http://minedata.cn"
         app:minemap_apiUrl="http://minedata.cn">
 
-    </com.minemap.minemapsdk.maps.MapView>-->
+    </com.minemap.minemapsdk.maps.MapView>
 
 </android.support.constraint.ConstraintLayout>

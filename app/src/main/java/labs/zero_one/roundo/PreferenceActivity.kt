@@ -10,7 +10,7 @@ import com.takisoft.fix.support.v7.preference.PreferenceFragmentCompat
  * 主设置页面的 Activity
  *
  * 子类列表
- * [PreferenceMainActivity]
+ * [PreferenceMainFragment]
  *
  * 重写方法列表
  * [onCreate]

@@ -5,22 +5,29 @@ apply plugin: 'kotlin-android'
 apply plugin: 'kotlin-android-extensions'
 
 android {
+    signingConfigs {
+        config {
+            keyAlias 'demokey'
+            keyPassword 'luckazhao'
+            storeFile file('/Tools/Android Project/Key/DemoKeyStore')
+            storePassword 'luckazhao'
+        }
+    }
     compileSdkVersion 27
-
     def newVersionCode = getVersionCode()
     defaultConfig {
         applicationId "labs.zero_one.roundo"
         minSdkVersion 21
         targetSdkVersion 27
         versionCode newVersionCode
-        versionName "0.1.3"
+        versionName "0.1.4"
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
     }
-
     buildTypes {
         release {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+            signingConfig signingConfigs.config
         }
     }
 }
@@ -32,8 +39,8 @@ repositories {
 }
 
 dependencies {
-    implementation fileTree(dir: 'libs', include: ['*.jar'])
-    implementation"org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
+    implementation fileTree(include: ['*.jar'], dir: 'libs')
+    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
     implementation 'com.android.support:appcompat-v7:27.1.1'
     implementation 'com.android.support.constraint:constraint-layout:1.1.2'
     implementation 'com.android.support:design:27.1.1'
@@ -43,13 +50,16 @@ dependencies {
     androidTestImplementation 'com.android.support.test.espresso:espresso-core:3.0.2'
     // MineMap Android SDK
     implementation(name: 'MinemapGLAndroidSDK-release', ext: 'aar')
+    implementation 'com.google.code.gson:gson:2.8.4'
     implementation 'com.jakewharton.timber:timber:4.6.0'
-    implementation 'com.squareup.okhttp3:okhttp:3.11.0'
+    //noinspection GradleDependency
+    implementation 'com.squareup.okhttp3:okhttp:3.9.1'  // MineMap doesn't work with 3.10+
     implementation 'com.mapzen.android:lost:2.1.2'
+    // Anko
+    implementation "org.jetbrains.anko:anko:$anko_version"
     // Android-Support-Preference-V7-Fix
     implementation 'com.takisoft.fix:preference-v7:27.1.1.1'
-    // gson
-    implementation 'com.google.code.gson:gson:2.8.4'
+
 }
 
 def getVersionCode() {

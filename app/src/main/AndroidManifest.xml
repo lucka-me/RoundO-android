@@ -3,6 +3,7 @@
     package="labs.zero_one.roundo">
 
     <!-- Permissions -->
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
     <uses-permission android:name="android.permission.INTERNET" />
 
     <application

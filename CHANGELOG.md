@@ -1,6 +1,18 @@
 <h1 align=center>更新日志</h1>
 
 ```markdown
+## [0.1.4] - 2018-08-17
+- 0.1.3(86) ->0.1.4(163)
+
+### Finished
+- Class: TrumeKit and Waypoint
+- Frame: LocationKit and MissionManager
+
+### Fixed
+- MineMap SDK always crashes
+```
+
+```markdown
 ## [0.1.3] - 2018-08-17
 - 0.1.2(62) -> 0.1.3(86)
 

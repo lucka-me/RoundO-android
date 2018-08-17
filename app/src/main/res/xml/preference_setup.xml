@@ -6,14 +6,12 @@
 
         <EditTextPreference
             android:title="@string/setup_basic_radius_title"
-            android:summary="@string/setup_basic_radius_summary"
             android:defaultValue="@string/setup_basic_radius_default"
             android:inputType="numberDecimal"
             android:key="@string/setup_basic_radius_key" />
 
         <EditTextPreference
             android:title="@string/setup_basic_waypoint_count_title"
-            android:summary="@string/setup_basic_waypoint_count_summary"
             android:defaultValue="@string/setup_basic_waypoint_count_default"
             android:inputType="numberDecimal"
             android:key="@string/setup_basic_waypoint_count_key" />
