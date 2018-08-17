@@ -5,8 +5,12 @@
 
     <string name="setup_basic_category_title">基本</string>
     <string name="setup_basic_radius_key">setup_basic_radius</string>
-    <string name="setup_basic_radius_title">半径</string>
-    <string name="setup_basic_radius_summary">任务圈半径（千米）</string>
+    <string name="setup_basic_radius_title">任务圈半径</string>
+    <string name="setup_basic_radius_summary">（千米）</string>
     <string name="setup_basic_radius_default">1</string>
+    <string name="setup_basic_waypoint_count_key">setup_basic_waypoint_count</string>
+    <string name="setup_basic_waypoint_count_title">任务点数量</string>
+    <string name="setup_basic_waypoint_count_summary">任务点数量</string>
+    <string name="setup_basic_waypoint_count_default">10</string>
 
 </resources>

@@ -1,5 +1,7 @@
 package labs.zero_one.roundo
 
+import android.app.Activity
+import android.content.Context
 import android.os.Bundle
 import android.support.v7.app.AppCompatActivity
 import android.view.Menu
@@ -65,12 +67,17 @@ class SetupActivity : AppCompatActivity() {
 
                 android.R.id.home -> {
                     // Call onBackPress() when tap the back button on the toolbar instead of finish()
+                    setResult(Activity.RESULT_CANCELED)
                     onBackPressed()
                     return true
                 }
 
                 R.id.menu_setup_check -> {
                     // Back to the MainActivity and start mission
+                    setResult(Activity.RESULT_OK)
+                    onBackPressed()
+                    //finish()
+                    return true
                 }
             }
         }
