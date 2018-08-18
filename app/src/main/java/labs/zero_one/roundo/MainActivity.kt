@@ -10,12 +10,6 @@ import android.provider.Settings
 import android.support.v7.app.AppCompatActivity
 import android.view.Menu
 import android.view.MenuItem
-import com.minemap.minemapsdk.MinemapAccountManager
-import com.minemap.minemapsdk.camera.CameraPosition
-import com.minemap.minemapsdk.camera.CameraUpdateFactory
-import com.minemap.minemapsdk.geometry.LatLng
-import com.minemap.minemapsdk.maps.MineMap
-import com.minemap.minemapsdk.maps.OnMapReadyCallback
 import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.android.synthetic.main.content_main.*
 
@@ -23,8 +17,6 @@ import kotlinx.android.synthetic.main.content_main.*
  * 主页面 Activity
  *
  * ## 属性列表
- * - [mineMap]
- * - [isMapInitialized]
  * - [locationKit]
  * - [locationKitListener]
  *
@@ -42,30 +34,22 @@ import kotlinx.android.synthetic.main.content_main.*
  * - [onRequestPermissionsResult]
  *
  * ## 自定义方法列表
- * - [initMap]
  *
  * @author lucka-me
  * @since 0.1
  *
- * @property [mineMap] 地图控制器
- * @property [isMapInitialized] 地图是否初始化
  * @property [locationKit] 位置工具
  * @property [locationKitListener] 位置工具消息监听器
  */
 class MainActivity : AppCompatActivity() {
 
-    private lateinit var mineMap: MineMap
-    private var isMapInitialized = false
+    private val mapKit = MapKit(this)
     private val locationKitListener = object : LocationKit.LocationKitListener {
 
         override fun onLocationUpdated(location: Location) {
-            if (isMapInitialized) {
-                mineMap.animateCamera(CameraUpdateFactory.newCameraPosition(
-                    CameraPosition
-                        .Builder()
-                        .target(LatLng(location))
-                        .build()
-                ))
+
+            if (mapKit.isFollowing) {
+                mapKit.moveTo(location)
             }
 
         }
@@ -75,10 +59,10 @@ class MainActivity : AppCompatActivity() {
             alert.setTitle(getString(R.string.title_alert))
             alert.setMessage(getString(R.string.location_provider_disabled))
             alert.setCancelable(false)
-            alert.setNegativeButton(getString(R.string.permission_system_settings)) { _, _ ->
+            alert.setPositiveButton(getString(R.string.permission_system_settings)) { _, _ ->
                 startActivity(Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS))
             }
-            alert.setPositiveButton(getString(R.string.confirm), null)
+            alert.setNegativeButton(getString(R.string.confirm), null)
             alert.show()
         }
 
@@ -153,12 +137,7 @@ class MainActivity : AppCompatActivity() {
         locationKit.requestPermission(this)
 
         // Setup Map
-        MinemapAccountManager.getInstance(
-            applicationContext,
-            getString(R.string.minemap_token),
-            "4807"
-        )
-        initMap(savedInstanceState)
+        mapKit.initMap(mapView, locationKit, savedInstanceState)
 
     }
 
@@ -238,30 +217,5 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
-    }
-
-    /**
-     * 初始化地图控制器
-     *
-     * @param [savedInstanceState] 初始化所需参数
-     *
-     * @throws Exception 地图初始化失败
-     *
-     * @author lucka-me
-     * @since 0.1.4
-     */
-    private fun initMap(savedInstanceState: Bundle?) {
-        mapView.onCreate(savedInstanceState)
-        mapView.getMapAsync(OnMapReadyCallback { newMap: MineMap? ->
-            if (newMap == null) throw Exception(getString(R.string.err_map_init_failed))
-            mineMap = newMap
-            isMapInitialized = true
-            mineMap.uiSettings.isCompassEnabled = true
-            mineMap.cameraPosition =
-                CameraPosition.Builder()
-                    .target(LatLng(locationKit.lastLocation))
-                    .zoom(16.0)
-                    .build()
-        })
     }
 }

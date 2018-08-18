@@ -42,7 +42,7 @@ class SetupActivity : AppCompatActivity() {
      * @author lucka-me
      * @since 0.1.2
      */
-    class SetupFragment() :
+    class SetupFragment :
         PreferenceFragmentCompat(),
         SharedPreferences.OnSharedPreferenceChangeListener {
 

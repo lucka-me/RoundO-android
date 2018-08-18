@@ -22,6 +22,7 @@ import android.support.v4.app.ActivityCompat
  * - [locationListener]
  * - [ellipsoidA]
  * - [ellipsoidEE]
+ * - [locationProvider]
  *
  * ## 子类列表
  * - [locationKitListener]
@@ -45,6 +46,7 @@ import android.support.v4.app.ActivityCompat
  * @property [locationListener] 原生定位消息监听器
  * @property [ellipsoidA] 椭球参数：长半轴
  * @property [ellipsoidEE] 椭球参数：扁率
+ * @property [locationProvider] 定位 Provider
  */
 class LocationKit(
     private var context: Context,
@@ -73,14 +75,14 @@ class LocationKit(
         }
 
         override fun onProviderDisabled(provider: String?) {
-            if (provider == LocationManager.NETWORK_PROVIDER) {
+            if (provider == locationProvider) {
                 isLocationAvailable = false
                 locationKitListener.onProviderDisabled()
             }
         }
 
         override fun onProviderEnabled(provider: String?) {
-            if (provider == LocationManager.NETWORK_PROVIDER) {
+            if (provider == locationProvider) {
                 isLocationAvailable = true
                 locationKitListener.onProviderEnabled()
             }
@@ -148,8 +150,18 @@ class LocationKit(
      * @since 0.1.5
      */
     init {
-        lastLocation.longitude = 108.947031
-        lastLocation.latitude = 34.259441
+        if (ActivityCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION) ==
+            PackageManager.PERMISSION_GRANTED
+        ) {
+            val location = locationManager.getLastKnownLocation(locationProvider)
+            locationListener.onLocationChanged(location)
+            if (!locationManager.isProviderEnabled(locationProvider)) {
+                locationKitListener.onProviderDisabled()
+            }
+        } else {
+            lastLocation.longitude = 108.947031
+            lastLocation.latitude = 34.259441
+        }
     }
 
     /**
@@ -208,18 +220,19 @@ class LocationKit(
      * @since 0.1.4
      */
     fun startUpdate(): Boolean {
-        if (ActivityCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION) ==
+        return if (ActivityCompat
+                .checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION) ==
             PackageManager.PERMISSION_GRANTED
         ) {
             locationManager.requestLocationUpdates(
-                LocationManager.NETWORK_PROVIDER,
+                locationProvider,
                 1000.toLong(),
                 5.toFloat(),
                 locationListener
             )
-            return true
+            true
         } else {
-            return false
+            false
         }
     }
 
@@ -239,6 +252,8 @@ class LocationKit(
      * ## Changelog
      * ### 0.1.5
      * - [Location] 改为非空类型
+     * ### 0.1.6
+     * - 参数 [location] 引用的对象也会被转换
      *
      * @param [location] 待转换的位置
      *
@@ -254,7 +269,7 @@ class LocationKit(
         val origLng = location.longitude
         // 不在国内不做转换
         if ((origLng < 72.004 || origLng > 137.8347) || (origLat < 0.8293 || origLat > 55.8271)) {
-            return location;
+            return location
         }
         val lat = origLat - 35.0
         val lng = origLng - 105.0
@@ -272,19 +287,19 @@ class LocationKit(
         val radLat = origLat / 180.0 * Math.PI
         val magic = Math.sin(radLat)
         val sqrtmagic = Math.sqrt(magic)
-        dLat = (dLat * 180.0) / ((ellipsoidA * (1 - ellipsoidEE)) / (magic * sqrtmagic) * Math.PI);
-        dLng = (dLng * 180.0) / (ellipsoidA / sqrtmagic * Math.cos(radLat) * Math.PI);
+        dLat = (dLat * 180.0) / ((ellipsoidA * (1 - ellipsoidEE)) / (magic * sqrtmagic) * Math.PI)
+        dLng = (dLng * 180.0) / (ellipsoidA / sqrtmagic * Math.cos(radLat) * Math.PI)
         val fixedLat = origLat + dLat
         val fixedLng = origLng + dLng
 
-        val fixedLocation = Location(location)
-        fixedLocation.latitude = fixedLat
-        fixedLocation.longitude = fixedLng
-        return fixedLocation
+        location.latitude = fixedLat
+        location.longitude = fixedLng
+        return location
     }
 
     companion object {
         private const val ellipsoidA = 6378245.0
         private const val ellipsoidEE = 0.00669342162296594323
+        private const val locationProvider = LocationManager.NETWORK_PROVIDER
     }
 }

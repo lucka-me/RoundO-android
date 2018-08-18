@@ -1,6 +1,17 @@
 <h1 align=center>更新日志</h1>
 
 ```markdown
+## [0.1.6] - 2018-08-18
+- 0.1.5(183) -> 0.1.6(217)
+
+### Finished
+- Package map functions in class MapKit
+
+### Changed
+- Coordinate converter improved
+```
+
+```markdown
 ## [0.1.5] - 2018-08-18
 - 0.1.4(163) -> 0.1.5(183)
 
