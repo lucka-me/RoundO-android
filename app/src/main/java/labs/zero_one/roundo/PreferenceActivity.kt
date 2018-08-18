@@ -9,14 +9,12 @@ import com.takisoft.fix.support.v7.preference.PreferenceFragmentCompat
 /**
  * 主设置页面的 Activity
  *
- * 子类列表
- * [PreferenceMainFragment]
+ * ## 子类列表
+ * - [PreferenceMainFragment]
  *
- * 重写方法列表
- * [onCreate]
- * [onOptionsItemSelected]
- *
- * 注释参考
+ * ## 重写方法列表
+ * - [onCreate]
+ * - [onOptionsItemSelected]
  *
  * @author lucka-me
  * @since 0.1.1
@@ -27,8 +25,8 @@ class PreferenceMainActivity : AppCompatActivity() {
     /**
      * 主设置界面的 Fragment
      *
-     * 重写方法列表
-     * [onCreatePreferencesFix]
+     * ## 重写方法列表
+     * - [onCreatePreferencesFix]
      *
      * @author lucka-me
      * @since 0.1.1
@@ -73,12 +71,12 @@ class PreferenceMainActivity : AppCompatActivity() {
 /**
  * 关于页面的 Activity
  *
- * 子类列表
- * [PreferenceAboutActivity]
+ * ## 子类列表
+ * - [PreferenceAboutActivity]
  *
- * 重写方法列表
- * [onCreate]
- * [onOptionsItemSelected]
+ * ## 重写方法列表
+ * - [onCreate]
+ * - [onOptionsItemSelected]
  *
  * @author lucka
  * @since 0.1
@@ -88,8 +86,8 @@ class PreferenceAboutActivity : AppCompatActivity() {
     /**
      * 关于界面的 Fragment
      *
-     * 重写方法列表
-     * [onCreatePreferencesFix]
+     * ## 重写方法列表
+     * - [onCreatePreferencesFix]
      *
      * @author lucka-me
      * @since 0.1.1

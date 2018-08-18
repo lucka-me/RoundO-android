@@ -1,8 +1,19 @@
 <h1 align=center>更新日志</h1>
 
 ```markdown
+## [0.1.5] - 2018-08-18
+- 0.1.4(163) -> 0.1.5(183)
+
+### Finished
+- Class: LocationKit
+
+### Fixed
+- Algorithm of coordinate converter
+```
+
+```markdown
 ## [0.1.4] - 2018-08-17
-- 0.1.3(86) ->0.1.4(163)
+- 0.1.3(86) -> 0.1.4(163)
 
 ### Finished
 - Class: TrumeKit and Waypoint

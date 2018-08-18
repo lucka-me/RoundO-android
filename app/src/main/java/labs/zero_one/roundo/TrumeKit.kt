@@ -4,15 +4,13 @@ import android.location.Location
 import android.os.Build
 
 /**
- * 反作弊工具
+ * 反作弊工具，提供一些反作弊功能
  *
- * 提供一些反作弊功能
+ * ## 属性列表
  *
- * 属性列表
- *
- * 方法列表
- * [checkEmulator] 模拟器检测
- * [checkMock] 模拟位置检测
+ * ## 方法列表
+ * - [checkEmulator]
+ * - [checkMock]
  *
  * @author lucka-me
  * @since 0.1.4
@@ -26,7 +24,6 @@ class TrumeKit() {
          *
          * @return [Boolean] 是否为模拟器
          *
-         * 注释参考
          * @see <a href="https://stackoverflow.com/a/21505193">Stack Overflow</a>
          *
          * @author lucka-me

@@ -12,13 +12,13 @@ import com.takisoft.fix.support.v7.preference.PreferenceFragmentCompat
 /**
  * 准备界面的 Activity
  *
- * 子类列表
- * [SetupFragment]
+ * ## 子类列表
+ * - [SetupFragment]
  *
- * 重写方法列表
- * [onCreate]
- * [onCreateOptionsMenu]
- * [onOptionsItemSelected]
+ * ## 重写方法列表
+ * - [onCreate]
+ * - [onCreateOptionsMenu]
+ * - [onOptionsItemSelected]
  *
  * @author lucka-me
  * @since 0.1.2
@@ -28,16 +28,16 @@ class SetupActivity : AppCompatActivity() {
     /**
      * 准备界面的 Fragment
      *
-     * 子类列表
-     * [SetupPreference]
+     * ## 子类列表
+     * - [SetupPreference]
      *
-     * 重写方法列表
-     * [onCreatePreferencesFix]
-     * [onDestroy]
-     * [onSharedPreferenceChanged]
+     * ## 重写方法列表
+     * - [onCreatePreferencesFix]
+     * - [onDestroy]
+     * - [onSharedPreferenceChanged]
      *
-     * 自定义方法列表
-     * [setSummaryOf]
+     * ## 自定义方法列表
+     * - [setSummaryOf]
      *
      * @author lucka-me
      * @since 0.1.2
@@ -48,6 +48,10 @@ class SetupActivity : AppCompatActivity() {
 
         /**
          * 准备页面 Preference 字符串资源
+         *
+         * ## 列表
+         * - [BasicRadius]
+         * - [BasicWaypointCount]
          *
          * @param [key] Key 资源
          * @param [summary] 介绍（格式）资源

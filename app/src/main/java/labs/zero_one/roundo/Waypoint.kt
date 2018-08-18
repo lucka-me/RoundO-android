@@ -4,16 +4,14 @@ import android.location.Location
 import java.io.Serializable
 
 /**
- * Waypoint 类
+ * 任务点类，用于存储任务点信息，并提供序列化/反序列化功能
  *
- * 用于存储任务点信息，并提供序列化/反序列化功能
+ * ## 属性列表
+ * - [longitude]
+ * - [latitude]
  *
- * 属性列表
- * [longitude]
- * [latitude]
- *
- * 访问器列表
- * [location]
+ * ## 访问器列表
+ * - [location]
  *
  * @param [location] 任务点位置
  * @param [isChecked] Waypoint 是否已被检查

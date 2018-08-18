@@ -7,4 +7,17 @@
     <string name="menu_main_start">开始</string>
     <string name="menu_main_stop">结束</string>
     <string name="menu_main_preference">设置</string>
+
+    <!-- Dialog -->
+    <string name="title_alert">警告</string>
+    <string name="confirm">确认</string>
+    <string name="cancel">取消</string>
+
+    <!-- Permission -->
+    <string name="permission_request_title">请求权限</string>
+    <string name="permission_explain_location">本应用需要访问您的位置以提供服务。</string>
+    <string name="permission_system_settings">设置</string>
+
+    <!-- Location -->
+    <string name="location_provider_disabled">定位服务不可用</string>
 </resources>
