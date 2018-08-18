@@ -6,10 +6,12 @@
         android:id="@+id/menu_main_start_stop"
         android:orderInCategory="100"
         android:title="@string/menu_main_start"
-        app:showAsAction="never" />
+        android:icon="@drawable/ic_menu_start"
+        app:showAsAction="ifRoom" />
     <item
         android:id="@+id/menu_main_preference"
         android:orderInCategory="100"
         android:title="@string/menu_main_preference"
-        app:showAsAction="never" />
+        android:icon="@drawable/ic_menu_preference"
+        app:showAsAction="ifRoom" />
 </menu>

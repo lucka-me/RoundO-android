@@ -43,7 +43,10 @@ import kotlinx.android.synthetic.main.content_main.*
  */
 class MainActivity : AppCompatActivity() {
 
+    // MapKit
     private val mapKit = MapKit(this)
+
+    // LocationKit
     private val locationKitListener = object : LocationKit.LocationKitListener {
 
         override fun onLocationUpdated(location: Location) {
@@ -75,6 +78,40 @@ class MainActivity : AppCompatActivity() {
         }
     }
     private lateinit var locationKit: LocationKit
+
+    // MissionManager
+    private val missionListener: MissionManager.MissionListener =
+        object : MissionManager.MissionListener {
+            override fun onStarted() {
+                for (waypoint in missionManager.waypointList) {
+                    mapKit.addMarkAt(waypoint.location)
+                }
+            }
+
+            override fun onStopped() {
+
+            }
+
+            override fun onStartFailed(error: Exception) {
+                val alert = AlertDialog.Builder(this@MainActivity)
+                alert.setTitle(getString(R.string.title_alert))
+                alert.setMessage(error.message)
+                alert.setCancelable(false)
+                alert.setPositiveButton(getString(R.string.confirm), null)
+                alert.show()
+
+            }
+
+            override fun onStopFailed(error: Exception) {
+
+            }
+
+            override fun onReached() {
+
+            }
+
+    }
+    private val missionManager = MissionManager(this, missionListener)
 
     /**
      * 主菜单项
@@ -188,10 +225,7 @@ class MainActivity : AppCompatActivity() {
             AppRequest.ActivitySetup.code -> {
                 if (resultCode == Activity.RESULT_OK) {
                     // Start Mission
-                    val alert = AlertDialog.Builder(this)
-                    alert.setTitle("开始任务")
-                    alert.setPositiveButton("确认", null)
-                    alert.show()
+                    missionManager.start(locationKit.lastLocation)
                 }
             }
 

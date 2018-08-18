@@ -9,24 +9,31 @@ import java.io.Serializable
  * ## 属性列表
  * - [longitude]
  * - [latitude]
+ * - [isChecked]
  *
  * ## 访问器列表
  * - [location]
  *
- * @param [location] 任务点位置
- * @param [isChecked] Waypoint 是否已被检查
+ * ## Changelog
+ * ### 0.1.7
+ * - 修改构造器参数，直接以经纬度构造
+ *
+ * @param [longitude] 经度
+ * @param [latitude] 纬度
+ * @param [isChecked] 任务点是否已完成，默认未完成
  *
  * @author lucka-me
  * @since 0.1.4
  *
- * @property [longitude] Waypoint 的经度
- * @property [latitude] Waypoint 的纬度
+ * @property [longitude] 经度
+ * @property [latitude] 纬度
  * @property [location] 位置（[Location]）访问器
  */
-class Waypoint(location: Location, var isChecked: Boolean) : Serializable {
+class Waypoint(
+    private var longitude: Double, private var latitude: Double,
+    var isChecked: Boolean = false
+) : Serializable {
 
-    private var longitude: Double = location.longitude
-    private var latitude: Double = location.latitude
     /**
      * Waypoint 的位置属性访问器
      *
@@ -48,8 +55,15 @@ class Waypoint(location: Location, var isChecked: Boolean) : Serializable {
             return location
         }
 
-    init {
-        this.location = location
+    /**
+     * @param [location] 位置
+     * @param [isChecked] 任务点是否已完成，默认未完成
+     *
+     * @author lucka
+     * @since 0.1.7
+     */
+    constructor(location: Location, isChecked: Boolean = false) : this(location.longitude, location.latitude, isChecked) {
+
     }
 
 

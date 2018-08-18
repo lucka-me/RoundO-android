@@ -11,6 +11,7 @@ import android.location.LocationManager
 import android.os.Bundle
 import android.provider.Settings
 import android.support.v4.app.ActivityCompat
+import kotlin.math.PI
 
 /**
  * 位置工具，封装 LocationManager，简化相关接口和方法，并提供坐标系转换等特色功能
@@ -44,8 +45,9 @@ import android.support.v4.app.ActivityCompat
  * @property [isLocationAvailable] 位置是否可用
  * @property [locationManager] 原生定位管理器
  * @property [locationListener] 原生定位消息监听器
- * @property [ellipsoidA] 椭球参数：长半轴
+ * @property [ellipsoidA] 椭球参数：长半轴（米）
  * @property [ellipsoidEE] 椭球参数：扁率
+ * @property [earthR] 地球平均半径（米）
  * @property [locationProvider] 定位 Provider
  */
 class LocationKit(
@@ -254,6 +256,8 @@ class LocationKit(
      * - [Location] 改为非空类型
      * ### 0.1.6
      * - 参数 [location] 引用的对象也会被转换
+     * ### 0.1.7
+     * - [Math.PI] -> [PI]
      *
      * @param [location] 待转换的位置
      *
@@ -275,20 +279,20 @@ class LocationKit(
         val lng = origLng - 105.0
         var dLat = (-100.0 + 2.0 * lng + 3.0 * lat + 0.2 * lat * lat + 0.1 * lng * lat
             + 0.2 * Math.sqrt(Math.abs(lng))
-            + (20.0 * Math.sin(6.0 * lng * Math.PI) + 20.0 * Math.sin(2.0 * lng * Math.PI))
-            * 2.0 / 3.0 + (20.0 * Math.sin(lat * Math.PI) + 40.0 * Math.sin(lat / 3.0 * Math.PI))
-            * 2.0 / 3.0 + (160.0 * Math.sin(lat / 12.0 * Math.PI)
-            + 320 * Math.sin(lat * Math.PI / 30.0)) * 2.0 / 3.0)
+            + (20.0 * Math.sin(6.0 * lng * PI) + 20.0 * Math.sin(2.0 * lng * PI))
+            * 2.0 / 3.0 + (20.0 * Math.sin(lat * PI) + 40.0 * Math.sin(lat / 3.0 * PI))
+            * 2.0 / 3.0 + (160.0 * Math.sin(lat / 12.0 * PI)
+            + 320 * Math.sin(lat * PI / 30.0)) * 2.0 / 3.0)
         var dLng = (300.0 + lng + 2.0 * lat + 0.1 * lng * lng + 0.1 * lng * lat + 0.1
-            * Math.sqrt(Math.abs(lng)) + (20.0 * Math.sin(6.0 * lng * Math.PI) + 20.0
-            * Math.sin(2.0 * lng * Math.PI)) * 2.0 / 3.0 + (20.0 * Math.sin(lng * Math.PI) + 40.0
-            * Math.sin(lng / 3.0 * Math.PI)) * 2.0 / 3.0 + (150.0 * Math.sin(lng / 12.0 * Math.PI)
-            + 300.0 * Math.sin(lng / 30.0 * Math.PI)) * 2.0 / 3.0)
-        val radLat = origLat / 180.0 * Math.PI
+            * Math.sqrt(Math.abs(lng)) + (20.0 * Math.sin(6.0 * lng * PI) + 20.0
+            * Math.sin(2.0 * lng * PI)) * 2.0 / 3.0 + (20.0 * Math.sin(lng * PI) + 40.0
+            * Math.sin(lng / 3.0 * PI)) * 2.0 / 3.0 + (150.0 * Math.sin(lng / 12.0 * PI)
+            + 300.0 * Math.sin(lng / 30.0 * PI)) * 2.0 / 3.0)
+        val radLat = origLat / 180.0 * PI
         val magic = Math.sin(radLat)
         val sqrtmagic = Math.sqrt(magic)
-        dLat = (dLat * 180.0) / ((ellipsoidA * (1 - ellipsoidEE)) / (magic * sqrtmagic) * Math.PI)
-        dLng = (dLng * 180.0) / (ellipsoidA / sqrtmagic * Math.cos(radLat) * Math.PI)
+        dLat = (dLat * 180.0) / ((ellipsoidA * (1 - ellipsoidEE)) / (magic * sqrtmagic) * PI)
+        dLng = (dLng * 180.0) / (ellipsoidA / sqrtmagic * Math.cos(radLat) * PI)
         val fixedLat = origLat + dLat
         val fixedLng = origLng + dLng
 
@@ -298,8 +302,9 @@ class LocationKit(
     }
 
     companion object {
-        private const val ellipsoidA = 6378245.0
-        private const val ellipsoidEE = 0.00669342162296594323
-        private const val locationProvider = LocationManager.NETWORK_PROVIDER
+        const val ellipsoidA = 6378245.0
+        const val ellipsoidEE = 0.00669342162296594323
+        const val earthR = 6372796.924
+        const val locationProvider = LocationManager.NETWORK_PROVIDER
     }
 }

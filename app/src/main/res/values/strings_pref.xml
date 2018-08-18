@@ -24,6 +24,12 @@
     <string name="pref_about_developer_lucka_url">https://roundo.zero-one.space</string>
 
     <string name="pref_about_dependency_category_title">依赖组件</string>
+    <string name="pref_about_dependency_mineMap_title">MineMap SDK</string>
+    <string name="pref_about_dependency_mineMap_summary">第四届"四维图新"杯地图技能与创新大赛平台</string>
+    <string name="pref_about_dependency_mineMap_url">http://139.199.20.29/index</string>
+    <string name="pref_about_dependency_supportLibrary_title">Support Library</string>
+    <string name="pref_about_dependency_supportLibrary_summary">A standard way to provide newer features</string>
+    <string name="pref_about_dependency_supportLibrary_url">https://developer.android.com/topic/libraries/support-library/index.html</string>
     <string name="pref_about_dependency_prefFix_title">Android Support Preference V7 Fix</string>
     <string name="pref_about_dependency_prefFix_summary">Fixed preference support library</string>
     <string name="pref_about_dependency_prefFix_url">https://github.com/Gericop/Android-Support-Preference-V7-Fix</string>

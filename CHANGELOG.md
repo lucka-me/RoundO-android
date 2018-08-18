@@ -1,6 +1,18 @@
 <h1 align=center>更新日志</h1>
 
 ```markdown
+## [0.1.7] - 2018-08-18
+- 0.1.6(217) -> 0.1.7(237)
+
+### Finished
+- Class: LocationKit
+- Methods: MissionManager.start(), MissionManager.generateWaypointList()
+
+### Changed
+- Constructor of Waypoint
+```
+
+```markdown
 ## [0.1.6] - 2018-08-18
 - 0.1.5(183) -> 0.1.6(217)
 

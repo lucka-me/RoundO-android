@@ -3,4 +3,7 @@
     <string name="err_location_mock">检测到模拟位置</string>
     <string name="err_location_permission_denied">未获取定位权限</string>
     <string name="err_map_init_failed">地图初始化失败</string>
+    <string name="err_preference_fetch_failed">获取首选项失败</string>
+
+    <string name="err_preference_wrong">首选项错误</string>
 </resources>

@@ -36,6 +36,24 @@
     <PreferenceCategory android:title="@string/pref_about_dependency_category_title">
 
         <Preference
+            android:icon="@drawable/ic_pref_about_minemap"
+            android:title="@string/pref_about_dependency_mineMap_title"
+            android:summary="@string/pref_about_dependency_mineMap_summary">
+            <intent
+                android:action="android.intent.action.VIEW"
+                android:data="@string/pref_about_dependency_mineMap_url" />
+        </Preference>
+
+        <Preference
+            android:icon="@drawable/ic_pref_about_dependency"
+            android:title="@string/pref_about_dependency_supportLibrary_title"
+            android:summary="@string/pref_about_dependency_supportLibrary_summary">
+            <intent
+                android:action="android.intent.action.VIEW"
+                android:data="@string/pref_about_dependency_supportLibrary_url" />
+        </Preference>
+
+        <Preference
             android:icon="@drawable/ic_pref_about_dependency"
             android:title="@string/pref_about_dependency_prefFix_title"
             android:summary="@string/pref_about_dependency_prefFix_summary">
