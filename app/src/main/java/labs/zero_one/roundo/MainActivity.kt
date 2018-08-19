@@ -8,6 +8,7 @@ import android.location.Location
 import android.os.Bundle
 import android.provider.Settings
 import android.support.v7.app.AppCompatActivity
+import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
 import kotlinx.android.synthetic.main.activity_main.*
@@ -82,14 +83,23 @@ class MainActivity : AppCompatActivity() {
     // MissionManager
     private val missionListener: MissionManager.MissionListener =
         object : MissionManager.MissionListener {
+
             override fun onStarted() {
+                Log.i("TEST", "即将绘制标记：" + missionManager.waypointList.size)
                 for (waypoint in missionManager.waypointList) {
-                    mapKit.addMarkAt(waypoint.location)
+                    mapKit.addMarkerAt(waypoint.location)
                 }
+                invalidateOptionsMenu()
             }
 
             override fun onStopped() {
-
+                mapKit.clearMarkers()
+                val alert = AlertDialog.Builder(this@MainActivity)
+                alert.setTitle("结束")
+                alert.setCancelable(false)
+                alert.setPositiveButton(getString(R.string.confirm), null)
+                alert.show()
+                invalidateOptionsMenu()
             }
 
             override fun onStartFailed(error: Exception) {
@@ -99,11 +109,17 @@ class MainActivity : AppCompatActivity() {
                 alert.setCancelable(false)
                 alert.setPositiveButton(getString(R.string.confirm), null)
                 alert.show()
-
+                invalidateOptionsMenu()
             }
 
             override fun onStopFailed(error: Exception) {
-
+                val alert = AlertDialog.Builder(this@MainActivity)
+                alert.setTitle(getString(R.string.title_alert))
+                alert.setMessage(error.message)
+                alert.setCancelable(false)
+                alert.setPositiveButton(getString(R.string.confirm), null)
+                alert.show()
+                invalidateOptionsMenu()
             }
 
             override fun onReached() {
@@ -120,21 +136,20 @@ class MainActivity : AppCompatActivity() {
      * - [StartStop]
      * - [Preference]
      *
-     * @param [index] 菜单项位置
      * @param [id] 菜单项资源 ID
      *
      * @author lucka
      * @since 0.1
      */
-    private enum class MainMenu(val index: Int, val id: Int) {
+    private enum class MainMenu(val id: Int) {
         /**
          * 开始/停止
          */
-        StartStop(0, R.id.menu_main_start_stop),
+        StartStop(R.id.menu_main_start_stop),
         /**
          * 设置
          */
-        Preference(1, R.id.menu_main_preference)
+        Preference(R.id.menu_main_preference)
     }
 
     /**
@@ -179,12 +194,17 @@ class MainActivity : AppCompatActivity() {
     }
 
     override fun onPause() {
+        missionManager.pause()
         locationKit.stopUpdate()
+
         super.onPause()
     }
 
     override fun onResume() {
+        missionManager.resume()
         locationKit.startUpdate()
+        invalidateOptionsMenu()
+
         super.onResume()
     }
 
@@ -194,14 +214,67 @@ class MainActivity : AppCompatActivity() {
         return true
     }
 
+    override fun onPrepareOptionsMenu(menu: Menu?): Boolean {
+        if (menu == null) return super.onPrepareOptionsMenu(menu)
+        when (missionManager.status) {
+
+            MissionManager.MissionStatus.Starting -> {
+                menu.findItem(MainMenu.StartStop.id)
+                    .setIcon(R.drawable.ic_menu_stop)
+                    .setTitle(R.string.menu_main_stop)
+                    .isEnabled = false
+                menu.findItem(MainMenu.StartStop.id).isEnabled = false
+            }
+
+            MissionManager.MissionStatus.Started -> {
+                menu.findItem(MainMenu.StartStop.id)
+                    .setIcon(R.drawable.ic_menu_stop)
+                    .setTitle(R.string.menu_main_stop)
+                    .isEnabled = true
+                menu.findItem(MainMenu.StartStop.id).isEnabled = true
+            }
+
+            MissionManager.MissionStatus.Stopping -> {
+                menu.findItem(MainMenu.StartStop.id)
+                    .setIcon(R.drawable.ic_menu_start)
+                    .setTitle(R.string.menu_main_start)
+                    .isEnabled = false
+                menu.findItem(MainMenu.StartStop.id).isEnabled = false
+            }
+
+            MissionManager.MissionStatus.Stopped -> {
+                menu.findItem(MainMenu.StartStop.id)
+                    .setIcon(R.drawable.ic_menu_start)
+                    .setTitle(R.string.menu_main_start)
+                    .isEnabled = true
+                menu.findItem(MainMenu.StartStop.id).isEnabled = true
+            }
+        }
+        return super.onPrepareOptionsMenu(menu)
+    }
+
     // Handel the selection on Main Menu
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         when (item.itemId) {
 
             MainMenu.StartStop.id -> {
-                val intent: Intent = Intent(this, SetupActivity::class.java)
-                    .apply {  }
-                startActivityForResult(intent, AppRequest.ActivitySetup.code)
+                when (missionManager.status) {
+
+                    MissionManager.MissionStatus.Started -> {
+                        missionManager.stop()
+                    }
+
+                    MissionManager.MissionStatus.Stopped -> {
+                        val intent: Intent = Intent(this, SetupActivity::class.java)
+                            .apply {  }
+                        startActivityForResult(intent, AppRequest.ActivitySetup.code)
+                    }
+
+                    else -> {
+
+                    }
+                }
+
             }
 
             MainMenu.Preference.id -> {

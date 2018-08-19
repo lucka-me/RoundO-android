@@ -1,7 +1,21 @@
 <h1 align=center>更新日志</h1>
 
 ```markdown
-## [0.1.8] - 2018-08-18
+## [0.1.9] - 2018-08-19
+- 0.1.8(244) -> 0.1.9(300)
+
+### Finished
+- Methods
+  - MainActivity: onPrepareOptionsMenu()
+  - MissionManager: pause(), resume(), stop()
+  - MapKit: clearMarkers()
+
+### Added
+- Save makers when map is not initialized and add them once the map initialized
+```
+
+```markdown
+## [0.1.8] - 2018-08-19
 - 0.1.7(237) -> 0.1.8(244)
 
 ### Finished

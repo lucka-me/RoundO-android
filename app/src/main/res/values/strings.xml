@@ -2,6 +2,7 @@
     <string name="app_name">RoundO</string>
     <string name="package_name">labs.zero_one.roundo</string>
     <string name="minemap_token">9282e20b60d248c5b0a2048ff39b625d</string>
+    <string name="mission_temp_file">Mission.temp</string>
 
     <!-- Main Menu -->
     <string name="menu_main_start">开始</string>
