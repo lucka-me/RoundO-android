@@ -8,7 +8,6 @@ import android.location.Location
 import android.os.Bundle
 import android.provider.Settings
 import android.support.v7.app.AppCompatActivity
-import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
 import kotlinx.android.synthetic.main.activity_main.*
@@ -56,6 +55,8 @@ class MainActivity : AppCompatActivity() {
                 mapKit.moveTo(location)
             }
 
+            missionManager.reach(location)
+
         }
 
         override fun onProviderDisabled() {
@@ -85,9 +86,12 @@ class MainActivity : AppCompatActivity() {
         object : MissionManager.MissionListener {
 
             override fun onStarted() {
-                Log.i("TEST", "即将绘制标记：" + missionManager.waypointList.size)
                 for (waypoint in missionManager.waypointList) {
-                    mapKit.addMarkerAt(waypoint.location)
+                    mapKit.addMarkerAt(
+                        waypoint.location,
+                        if (waypoint.isChecked) MapKit.MarkerType.Checked
+                        else MapKit.MarkerType.Unchecked
+                    )
                 }
                 invalidateOptionsMenu()
             }
@@ -122,8 +126,30 @@ class MainActivity : AppCompatActivity() {
                 invalidateOptionsMenu()
             }
 
-            override fun onReached() {
+            override fun onChecked(indexList: List<Int>) {
+                // Update markers
+                var msg = "序号：" + indexList[0]
+                if (indexList.size > 1) {
+                    for (index in indexList) {
+                        msg += ", $index"
+                    }
+                }
+                val alert = AlertDialog.Builder(this@MainActivity)
+                alert.setTitle("签到")
+                alert.setMessage(msg)
+                alert.setPositiveButton(getString(R.string.confirm), null)
+                alert.show()
+                for (index in indexList) {
+                    mapKit.changeMarkerIconAt(index, MapKit.MarkerType.Checked)
+                }
+            }
 
+            override fun onFinishedAll() {
+                val alert = AlertDialog.Builder(this@MainActivity)
+                alert.setTitle("全部完成！")
+                alert.setPositiveButton(getString(R.string.confirm), null)
+                alert.show()
+                missionManager.stop()
             }
 
     }

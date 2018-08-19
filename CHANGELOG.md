@@ -1,6 +1,21 @@
 <h1 align=center>更新日志</h1>
 
 ```markdown
+## [0.1.10] - 2018-08-19
+- 0.1.9(300) -> 0.1.10(332)
+
+### Finished
+- MapKit.MarkerType with properties, methods and resources
+- Methods
+  - MapKit: addMarkerAt(), changeMarkerIconAt()
+  - MissionManager: reach()
+  - MainActivity: onChecked(), onFinishedAll()
+
+### Fixed
+- Algorithm for fixCoordinate()
+```
+
+```markdown
 ## [0.1.9] - 2018-08-19
 - 0.1.8(244) -> 0.1.9(300)
 

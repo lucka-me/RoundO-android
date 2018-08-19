@@ -50,7 +50,7 @@ class MissionManager(private var context: Context, private val missionListener: 
      * - [onStartFailed]
      * - [onStopped]
      * - [onStopFailed]
-     * - [onReached]
+     * - [onChecked]
      *
      * @author lucka-me
      * @since 0.1.4
@@ -87,11 +87,21 @@ class MissionManager(private var context: Context, private val missionListener: 
          */
         fun onStopFailed(error: Exception)
         /**
-         * 任务开始
+         * 完成签到
+         *
+         * @param [indexList] 新签到的任务点的序号
+         *
          * @author lucka-me
          * @since 0.1.4
          */
-        fun onReached()
+        fun onChecked(indexList: List<Int>)
+        /**
+         * 全部完成
+         *
+         * @author lucka-me
+         * @since 0.1.10
+         */
+        fun onFinishedAll()
     }
 
     /**
@@ -267,6 +277,41 @@ class MissionManager(private var context: Context, private val missionListener: 
             alert.setCancelable(false)
             alert.setPositiveButton(context.getString(R.string.confirm), null)
             alert.show()
+        }
+    }
+
+    /**
+     * 抵达地点并签到
+     *
+     * @param [location] 抵达的位置
+     *
+     * @author lucka-me
+     * @since 0.1.10
+     */
+    fun reach(location: Location) {
+        if (status != MissionStatus.Started) return
+        doAsync {
+            val checkedIndexList: ArrayList<Int> = ArrayList(0)
+            var checkedTotal = 0
+            for (waypoint in waypointList) {
+                if (!waypoint.isChecked) {
+                    if (location.distanceTo(waypoint.location) < 40) {
+                        checkedIndexList.add(waypointList.indexOf(waypoint))
+                        waypoint.isChecked = true
+                    }
+                }
+                checkedTotal += if (waypoint.isChecked) 1 else 0
+            }
+            uiThread {
+                if (checkedIndexList.isNotEmpty()) {
+                    // Unsure if is necessary
+                    for (index in checkedIndexList) {
+                        waypointList[index].isChecked = true
+                    }
+                    missionListener.onChecked(checkedIndexList.toList())
+                    if (checkedTotal == waypointList.size) missionListener.onFinishedAll()
+                }
+            }
         }
     }
 

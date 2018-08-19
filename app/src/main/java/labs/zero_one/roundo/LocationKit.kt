@@ -11,6 +11,7 @@ import android.location.LocationManager
 import android.os.Bundle
 import android.provider.Settings
 import android.support.v4.app.ActivityCompat
+import com.minemap.minemapsdk.geometry.LatLng
 import kotlin.math.*
 
 /**
@@ -63,6 +64,7 @@ class LocationKit(
 
         override fun onLocationChanged(location: Location?) {
 
+
             if (TrumeKit.checkMock(location)) {
                 val error = Exception(context.getString(R.string.err_location_mock))
                 locationKitListener.onException(error)
@@ -74,6 +76,7 @@ class LocationKit(
             }
             lastLocation = fixCoordinate(location)
             locationKitListener.onLocationUpdated(lastLocation)
+            LatLng().wrap()
         }
 
         override fun onProviderDisabled(provider: String?) {
@@ -155,8 +158,8 @@ class LocationKit(
         if (ActivityCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION) ==
             PackageManager.PERMISSION_GRANTED
         ) {
-            val location = locationManager.getLastKnownLocation(locationProvider)
-            locationListener.onLocationChanged(location)
+            lastLocation = fixCoordinate(locationManager.getLastKnownLocation(locationProvider))
+            locationListener.onLocationChanged(lastLocation)
             if (!locationManager.isProviderEnabled(locationProvider)) {
                 locationKitListener.onProviderDisabled()
             }
@@ -258,6 +261,8 @@ class LocationKit(
      * - 参数 [location] 引用的对象也会被转换
      * ### 0.1.7
      * - [Math.PI] -> [PI]
+     * ### 0.1.10
+     * - 修正算法
      *
      * @param [location] 待转换的位置
      *
@@ -289,10 +294,11 @@ class LocationKit(
             * sin(lng / 3.0 * PI)) * 2.0 / 3.0 + (150.0 * sin(lng / 12.0 * PI)
             + 300.0 * sin(lng / 30.0 * PI)) * 2.0 / 3.0)
         val radLat = origLat / 180.0 * PI
-        val magic = sin(radLat)
-        val sqrtmagic = sqrt(magic)
-        dLat = (dLat * 180.0) / ((ellipsoidA * (1 - ellipsoidEE)) / (magic * sqrtmagic) * PI)
-        dLng = (dLng * 180.0) / (ellipsoidA / sqrtmagic * cos(radLat) * PI)
+        var magic = sin(radLat)
+        magic = 1 - ellipsoidEE * magic * magic;
+        val sqrtMagic = sqrt(magic)
+        dLat = (dLat * 180.0) / ((ellipsoidA * (1 - ellipsoidEE)) / (magic * sqrtMagic) * PI)
+        dLng = (dLng * 180.0) / (ellipsoidA / sqrtMagic * cos(radLat) * PI)
         val fixedLat = origLat + dLat
         val fixedLng = origLng + dLng
 
@@ -302,7 +308,7 @@ class LocationKit(
     }
 
     companion object {
-        const val ellipsoidA = 6378245.0
+        const val ellipsoidA = 6378137.0
         const val ellipsoidEE = 0.00669342162296594323
         const val earthR = 6372796.924
         const val locationProvider = LocationManager.NETWORK_PROVIDER
