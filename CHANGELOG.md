@@ -1,6 +1,20 @@
 <h1 align=center>更新日志</h1>
 
 ```markdown
+## [0.1.8] - 2018-08-18
+- 0.1.7(237) -> 0.1.8(244)
+
+### Finished
+- Methods: Value Checker for SetupFragment
+
+### Added
+- Zoom range for map
+
+### Changed
+- Use kotlin.math in LocationKit.fixCoordinate()
+```
+
+```markdown
 ## [0.1.7] - 2018-08-18
 - 0.1.6(217) -> 0.1.7(237)
 

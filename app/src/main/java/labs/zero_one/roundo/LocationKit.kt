@@ -11,7 +11,7 @@ import android.location.LocationManager
 import android.os.Bundle
 import android.provider.Settings
 import android.support.v4.app.ActivityCompat
-import kotlin.math.PI
+import kotlin.math.*
 
 /**
  * 位置工具，封装 LocationManager，简化相关接口和方法，并提供坐标系转换等特色功能
@@ -278,21 +278,21 @@ class LocationKit(
         val lat = origLat - 35.0
         val lng = origLng - 105.0
         var dLat = (-100.0 + 2.0 * lng + 3.0 * lat + 0.2 * lat * lat + 0.1 * lng * lat
-            + 0.2 * Math.sqrt(Math.abs(lng))
-            + (20.0 * Math.sin(6.0 * lng * PI) + 20.0 * Math.sin(2.0 * lng * PI))
-            * 2.0 / 3.0 + (20.0 * Math.sin(lat * PI) + 40.0 * Math.sin(lat / 3.0 * PI))
-            * 2.0 / 3.0 + (160.0 * Math.sin(lat / 12.0 * PI)
-            + 320 * Math.sin(lat * PI / 30.0)) * 2.0 / 3.0)
+            + 0.2 * sqrt(abs(lng))
+            + (20.0 * sin(6.0 * lng * PI) + 20.0 * sin(2.0 * lng * PI))
+            * 2.0 / 3.0 + (20.0 * sin(lat * PI) + 40.0 * sin(lat / 3.0 * PI))
+            * 2.0 / 3.0 + (160.0 * sin(lat / 12.0 * PI)
+            + 320 * sin(lat * PI / 30.0)) * 2.0 / 3.0)
         var dLng = (300.0 + lng + 2.0 * lat + 0.1 * lng * lng + 0.1 * lng * lat + 0.1
-            * Math.sqrt(Math.abs(lng)) + (20.0 * Math.sin(6.0 * lng * PI) + 20.0
-            * Math.sin(2.0 * lng * PI)) * 2.0 / 3.0 + (20.0 * Math.sin(lng * PI) + 40.0
-            * Math.sin(lng / 3.0 * PI)) * 2.0 / 3.0 + (150.0 * Math.sin(lng / 12.0 * PI)
-            + 300.0 * Math.sin(lng / 30.0 * PI)) * 2.0 / 3.0)
+            * sqrt(abs(lng)) + (20.0 * sin(6.0 * lng * PI) + 20.0
+            * sin(2.0 * lng * PI)) * 2.0 / 3.0 + (20.0 * sin(lng * PI) + 40.0
+            * sin(lng / 3.0 * PI)) * 2.0 / 3.0 + (150.0 * sin(lng / 12.0 * PI)
+            + 300.0 * sin(lng / 30.0 * PI)) * 2.0 / 3.0)
         val radLat = origLat / 180.0 * PI
-        val magic = Math.sin(radLat)
-        val sqrtmagic = Math.sqrt(magic)
+        val magic = sin(radLat)
+        val sqrtmagic = sqrt(magic)
         dLat = (dLat * 180.0) / ((ellipsoidA * (1 - ellipsoidEE)) / (magic * sqrtmagic) * PI)
-        dLng = (dLng * 180.0) / (ellipsoidA / sqrtmagic * Math.cos(radLat) * PI)
+        dLng = (dLng * 180.0) / (ellipsoidA / sqrtmagic * cos(radLat) * PI)
         val fixedLat = origLat + dLat
         val fixedLng = origLng + dLng
 

@@ -67,6 +67,8 @@ class MapKit(private val context: Context) {
                 (16 * Resources.getSystem().displayMetrics.density).toInt(),
                 (16 * Resources.getSystem().displayMetrics.density).toInt(),
                 mineMap.uiSettings.compassMarginBottom)
+            mineMap.setMaxZoomPreference(17.0)
+            mineMap.setMinZoomPreference(3.0)
             mineMap.cameraPosition =
                 CameraPosition.Builder()
                     .target(LatLng(locationKit.lastLocation))
