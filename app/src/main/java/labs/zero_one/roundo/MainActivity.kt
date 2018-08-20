@@ -51,7 +51,7 @@ class MainActivity : AppCompatActivity() {
 
         override fun onLocationUpdated(location: Location) {
 
-            if (mapKit.isFollowing) {
+            if (!mapKit.isCameraFree) {
                 mapKit.moveTo(location)
             }
 
@@ -216,6 +216,24 @@ class MainActivity : AppCompatActivity() {
 
         // Setup Map
         mapKit.initMap(mapView, locationKit, savedInstanceState)
+
+        // Setup FAB
+        if (mapKit.isCameraFree) {
+            buttonResetCamera.show()
+        } else {
+            buttonResetCamera.hide()
+        }
+        buttonResetCamera.setOnClickListener {
+            mapKit.moveTo(locationKit.lastLocation)
+            mapKit.isCameraFree = false
+            buttonResetCamera.hide()
+        }
+        mapKit.addOnMoveBeginListener {
+            if (!mapKit.isCameraFree) {
+                mapKit.isCameraFree = true
+                buttonResetCamera.show()
+            }
+        }
 
     }
 

@@ -4,6 +4,7 @@ import android.content.Context
 import android.content.res.Resources
 import android.location.Location
 import android.os.Bundle
+import com.minemap.android.gestures.MoveGestureDetector
 import com.minemap.minemapsdk.MinemapAccountManager
 import com.minemap.minemapsdk.annotations.Icon
 import com.minemap.minemapsdk.annotations.IconFactory
@@ -22,8 +23,8 @@ import com.minemap.minemapsdk.maps.MineMap
  * - [mineMap]
  * - [isMapInitialized]
  * - [markerList]
- * - [tempMarkerOptionsList]
- * - [isFollowing]
+ * - [onMapInitializedList]
+ * - [isCameraFree]
  * - [markerIconList]
  *
  * ## 子类列表
@@ -31,6 +32,8 @@ import com.minemap.minemapsdk.maps.MineMap
  *
  * ## 方法列表
  * - [initMap]
+ * - [addOnMapInitialized]
+ * - [addOnMoveBeginListener]
  * - [moveTo]
  * - [add]
  * - [addMarkerAt]
@@ -44,9 +47,9 @@ import com.minemap.minemapsdk.maps.MineMap
  *
  * @property [mineMap] 地图控制器
  * @property [isMapInitialized] [mineMap] 是否成功初始化
- * @property [tempMarkerOptionsList] 标记暂存列表
+ * @property [onMapInitializedList] 地图初始化完成回调事件列表
  * @property [markerList] 标记列表
- * @property [isFollowing] 中心是否跟随移动
+ * @property [isCameraFree] 中心是否自由
  * @property [markerIconList] 标记样式列表
  */
 class MapKit(private val context: Context) {
@@ -54,8 +57,9 @@ class MapKit(private val context: Context) {
     private lateinit var mineMap: MineMap
     private var isMapInitialized = false
     private var markerList: ArrayList<Marker> = ArrayList(0)
-    private var tempMarkerOptionsList: ArrayList<MarkerOptions> = ArrayList(0)
-    var isFollowing = true
+    //private var tempMarkerOptionsList: ArrayList<MarkerOptions> = ArrayList(0)
+    private var onMapInitializedList: ArrayList<(MineMap) -> Unit> = ArrayList(0)
+    var isCameraFree = false
 
     /**
      * 标记类型
@@ -98,12 +102,18 @@ class MapKit(private val context: Context) {
         mapView.onCreate(savedInstanceState)
         mapView.getMapAsync { newMap ->
             if (newMap == null) throw Exception(context.getString(R.string.err_map_init_failed))
-            isMapInitialized = true
             mineMap = newMap
+            isMapInitialized = true
+            /*
             for (markerOptions in tempMarkerOptionsList) {
                 markerList.add(mineMap.addMarker(markerOptions))
             }
-            tempMarkerOptionsList.clear()
+            tempMarkerOptionsList.clear()*/
+            // Handle the callbacks
+            for (callback in onMapInitializedList) {
+                callback(mineMap)
+            }
+            onMapInitializedList.clear()
             mineMap.setStyleUrl("http://minedata.cn/service/solu/style/id/4810")
             mineMap.uiSettings.isCompassEnabled = true
             mineMap.uiSettings.setCompassMargins(
@@ -122,6 +132,50 @@ class MapKit(private val context: Context) {
     }
 
     /**
+     * 添加地图初始化完成回调事件，当 [mineMap] 初始化完成后将会依次执行；若初始化已完成则直接执行
+     *
+     * @param [callback] 回调事件
+     *
+     * @return 当前的回调事件列表 [onMapInitializedList] 长度，若初始化已完成则返回 0
+     *
+     * @author lucka-me
+     * @since 0.1.11
+     */
+    fun addOnMapInitialized(callback: (MineMap) -> Unit): Int {
+        return if (!isMapInitialized) {
+            onMapInitializedList.add(callback)
+            onMapInitializedList.size - 1
+        } else {
+            callback.invoke(mineMap)
+            0
+        }
+    }
+
+    /**
+     * 添加地图开始移动监听器，封装 [MineMap.OnMoveListener.onMoveBegin]，仅当用户移动地图时触发
+     *
+     * @param [listener] 监听器
+     *
+     * @author lucka-me
+     * @since 0.1.11
+     */
+    fun addOnMoveBeginListener(listener: () -> Unit) {
+        if (isMapInitialized) {
+            mineMap.addOnMoveListener(object : MineMap.OnMoveListener {
+                override fun onMoveBegin(p0: MoveGestureDetector?) {
+                    listener()
+                }
+                override fun onMove(p0: MoveGestureDetector?) {}
+                override fun onMoveEnd(p0: MoveGestureDetector?) {}
+            })
+        } else {
+            addOnMapInitialized {
+                addOnMoveBeginListener(listener)
+            }
+        }
+    }
+
+    /**
      * 将地图中心移动至目标位置
      *
      * @param [location] 目标位置
@@ -130,13 +184,19 @@ class MapKit(private val context: Context) {
      * @since 0.1.6
      */
     fun moveTo(location: Location){
-        if (!isMapInitialized) return
-        mineMap.animateCamera(CameraUpdateFactory.newCameraPosition(
-            CameraPosition
-                .Builder()
-                .target(LatLng(location))
-                .build()
-        ))
+        if (isMapInitialized) {
+            mineMap.animateCamera(CameraUpdateFactory.newCameraPosition(
+                CameraPosition
+                    .Builder()
+                    .target(LatLng(location))
+                    .build()
+            ))
+        } else {
+            addOnMapInitialized {
+                moveTo(location)
+            }
+        }
+
     }
 
     /**
@@ -144,7 +204,9 @@ class MapKit(private val context: Context) {
      *
      * ## Changelog
      * ### 0.1.9
-     * - 若地图还未初始化则将标记存入 [tempMarkerOptionsList]，待初始化后再加入
+     * - 若地图还未初始化则将标记存入 tempMarkerOptionsList，待初始化后再加入
+     * ### 0.1.11
+     * - 废除 tempMarkerOptionsList，改为使用 [addOnMapInitialized]
      *
      * @param [markerOptions] 标记
      *
@@ -155,7 +217,10 @@ class MapKit(private val context: Context) {
         if (isMapInitialized) {
             markerList.add(mineMap.addMarker(markerOptions))
         } else {
-            tempMarkerOptionsList.add(markerOptions)
+            //tempMarkerOptionsList.add(markerOptions)
+            addOnMapInitialized {
+                markerList.add(mineMap.addMarker(markerOptions))
+            }
         }
     }
 
@@ -194,11 +259,19 @@ class MapKit(private val context: Context) {
      * @since 0.1.10
      */
     fun changeMarkerIconAt(index: Int, type: MarkerType) {
+        if (isMapInitialized) {
+            markerList[index].icon = markerIconList[type.iconIndex]
+        } else {
+            addOnMapInitialized {
+                changeMarkerIconAt(index, type)
+            }
+        }
+        /*
         if (!isMapInitialized && index < tempMarkerOptionsList.size) {
             tempMarkerOptionsList[index].icon = markerIconList[type.iconIndex]
         } else if (isMapInitialized && index < markerList.size) {
             markerList[index].icon = markerIconList[type.iconIndex]
-        }
+        }*/
     }
 
     /**

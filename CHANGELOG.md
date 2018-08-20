@@ -1,6 +1,17 @@
 <h1 align=center>更新日志</h1>
 
 ```markdown
+## [0.1.11] - 2018-08-20
+- 0.1.10(332) -> 0.1.11(342)
+
+### Finished
+- Reset Camera FAB
+
+### Changed
+- Use callback to handle tasks after map initialized
+```
+
+```markdown
 ## [0.1.10] - 2018-08-19
 - 0.1.9(300) -> 0.1.10(332)
 
