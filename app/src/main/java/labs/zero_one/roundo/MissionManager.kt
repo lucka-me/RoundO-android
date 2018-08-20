@@ -5,8 +5,6 @@ import android.content.Context
 import android.content.SharedPreferences
 import android.location.Location
 import android.support.v7.preference.PreferenceManager
-import android.util.Log
-import kotlinx.coroutines.experimental.delay
 import org.jetbrains.anko.doAsync
 import org.jetbrains.anko.uiThread
 import java.io.*
@@ -24,6 +22,7 @@ import kotlin.math.*
  * ## 子类列表
  * - [MissionListener]
  * - [MissionStatus]
+ * - [MissionData]
  *
  * ## 方法列表
  * - [start]
@@ -43,7 +42,7 @@ import kotlin.math.*
 class MissionManager(private var context: Context, private val missionListener: MissionListener) {
 
     var waypointList: ArrayList<Waypoint> = ArrayList(0)
-    var center: Waypoint = Waypoint(0.0, 0.0)
+    var data: MissionData = MissionData(Waypoint(Location("")), 0.0)
     var status: MissionStatus = MissionStatus.Stopped
 
     /**
@@ -141,6 +140,17 @@ class MissionManager(private var context: Context, private val missionListener: 
     }
 
     /**
+     * 任务基本信息
+     *
+     * @property [center] 中心位置
+     * @property [radius] 任务圈半径
+     *
+     * @author lucka-me
+     * @since 0.1.13
+     */
+    data class MissionData(var center: Waypoint, var radius: Double): Serializable
+
+    /**
      * 开始任务
      *
      * ## Changelog
@@ -155,16 +165,15 @@ class MissionManager(private var context: Context, private val missionListener: 
     fun start(centerLocation: Location) {
 
         status = MissionStatus.Starting
-        center = Waypoint(centerLocation)
+        data.center = Waypoint(centerLocation)
 
         doAsync {
 
             val sharedPreferences: SharedPreferences
-            val missionRadius: Double
             val waypointCount: Int
             try {
                 sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context)
-                missionRadius = sharedPreferences
+                data.radius = sharedPreferences
                     .getString(
                         context.getString(R.string.setup_basic_radius_key),
                         context.getString(R.string.setup_basic_radius_default)
@@ -187,7 +196,7 @@ class MissionManager(private var context: Context, private val missionListener: 
                 }
                 return@doAsync
             }
-            waypointList = generateWaypointList(centerLocation, missionRadius, waypointCount)
+            waypointList = generateWaypointList(centerLocation, data.radius, waypointCount)
             // Just for demo
             Thread.sleep(5000)
             uiThread {
@@ -231,7 +240,7 @@ class MissionManager(private var context: Context, private val missionListener: 
         try {
             tempFileOutputStream = FileOutputStream(tempFile)
             objectOutputStream = ObjectOutputStream(tempFileOutputStream)
-            objectOutputStream.writeObject(center)
+            objectOutputStream.writeObject(data)
             objectOutputStream.writeObject(waypointList)
             objectOutputStream.close()
             tempFileOutputStream.close()
@@ -253,7 +262,6 @@ class MissionManager(private var context: Context, private val missionListener: 
      * @since 0.1.4
      */
     fun resume() {
-        Log.i("TEST","resume() 正在恢复任务，状态：" + status)
 
         val tempFilename = context.getString(R.string.mission_temp_file)
         val tempFile = File(context.filesDir, tempFilename)
@@ -267,7 +275,7 @@ class MissionManager(private var context: Context, private val missionListener: 
         try {
             tempFileInputStream = FileInputStream(tempFile)
             objectInputStream = ObjectInputStream(tempFileInputStream)
-            center = objectInputStream.readObject() as Waypoint
+            data = objectInputStream.readObject() as MissionData
             @Suppress("UNCHECKED_CAST")
             waypointList = objectInputStream.readObject() as ArrayList<Waypoint>
             objectInputStream.close()

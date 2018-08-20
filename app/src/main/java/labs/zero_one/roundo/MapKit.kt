@@ -13,6 +13,7 @@ import com.minemap.minemapsdk.annotations.MarkerOptions
 import com.minemap.minemapsdk.camera.CameraPosition
 import com.minemap.minemapsdk.camera.CameraUpdateFactory
 import com.minemap.minemapsdk.geometry.LatLng
+import com.minemap.minemapsdk.geometry.LatLngBounds
 import com.minemap.minemapsdk.maps.MapView
 import com.minemap.minemapsdk.maps.MineMap
 
@@ -35,6 +36,7 @@ import com.minemap.minemapsdk.maps.MineMap
  * - [addOnMapInitialized]
  * - [addOnMoveBeginListener]
  * - [moveTo]
+ * - [resetZoomAndCenter]
  * - [add]
  * - [addMarkerAt]
  * - [changeMarkerIconAt]
@@ -109,11 +111,6 @@ class MapKit(private val context: Context) {
                 markerList.add(mineMap.addMarker(markerOptions))
             }
             tempMarkerOptionsList.clear()*/
-            // Handle the callbacks
-            for (callback in onMapInitializedList) {
-                callback(mineMap)
-            }
-            onMapInitializedList.clear()
             mineMap.setStyleUrl("http://minedata.cn/service/solu/style/id/4810")
             mineMap.uiSettings.isCompassEnabled = true
             mineMap.uiSettings.setCompassMargins(
@@ -128,6 +125,11 @@ class MapKit(private val context: Context) {
                     .target(LatLng(locationKit.lastLocation))
                     .zoom(14.0)
                     .build()
+            // Handle the callbacks
+            for (callback in onMapInitializedList) {
+                callback(mineMap)
+            }
+            onMapInitializedList.clear()
         }
     }
 
@@ -197,6 +199,39 @@ class MapKit(private val context: Context) {
             }
         }
 
+    }
+
+    /**
+     * 重置缩放和中心
+     *
+     * @param [waypointList] 任务点列表
+     *
+     * @author lucka-me
+     * @since 0.1.13
+     */
+    fun resetZoomAndCenter(waypointList: ArrayList<Waypoint>) {
+        var latNorth = waypointList[0].location.latitude
+        var lonEast = waypointList[0].location.longitude
+        var latSouth = waypointList[0].location.latitude
+        var lonWest = waypointList[0].location.longitude
+        for (waypoint in waypointList) {
+            latNorth = if (waypoint.location.latitude > latNorth) waypoint.location.latitude else latNorth
+            lonEast = if (waypoint.location.longitude > lonEast) waypoint.location.longitude else lonEast
+            latSouth = if (waypoint.location.latitude < latSouth) waypoint.location.latitude else latSouth
+            lonWest = if (waypoint.location.longitude < lonWest) waypoint.location.longitude else lonWest
+        }
+        val cameraUpdateFactory = CameraUpdateFactory.newLatLngBounds(
+            LatLngBounds.from(latNorth,  lonEast,  latSouth,  lonWest),
+            (16 * Resources.getSystem().displayMetrics.density).toInt()
+        )
+
+        if (isMapInitialized) {
+            mineMap.animateCamera(cameraUpdateFactory)
+        } else {
+            addOnMapInitialized {
+                mineMap.animateCamera(cameraUpdateFactory)
+            }
+        }
     }
 
     /**

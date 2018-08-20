@@ -54,7 +54,8 @@ class MainActivity : AppCompatActivity() {
 
             override fun onLocationUpdated(location: Location) {
 
-                if (!mapKit.isCameraFree) {
+                if (!mapKit.isCameraFree &&
+                    missionManager.status != MissionManager.MissionStatus.Started) {
                     mapKit.moveTo(location)
                 }
 
@@ -101,6 +102,7 @@ class MainActivity : AppCompatActivity() {
                         }
                     )
                 }
+                mapKit.resetZoomAndCenter(missionManager.waypointList)
                 invalidateOptionsMenu()
                 // Update Progress Bar
                 progressBar.layoutParams.height = AppBarLayout.LayoutParams.WRAP_CONTENT
@@ -243,10 +245,14 @@ class MainActivity : AppCompatActivity() {
             buttonResetCamera.hide()
         }
         buttonResetCamera.setOnClickListener {
-            mapKit.moveTo(when(missionManager.status) {
-                MissionManager.MissionStatus.Started -> missionManager.center.location
-                else -> locationKit.lastLocation
-            })
+            when(missionManager.status) {
+                MissionManager.MissionStatus.Started -> {
+                    mapKit.resetZoomAndCenter(missionManager.waypointList)
+                }
+                else -> {
+                    mapKit.moveTo(locationKit.lastLocation)
+                }
+            }
             mapKit.isCameraFree = false
             buttonResetCamera.hide()
         }

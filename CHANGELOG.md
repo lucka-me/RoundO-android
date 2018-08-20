@@ -1,6 +1,14 @@
 <h1 align=center>更新日志</h1>
 
 ```markdown
+## [0.1.13] - 2018-08-20
+- 0.1.12(403) -> 0.1.13(436)
+
+### Finished
+- Method: MapKit.resetZoomAndCenter()
+```
+
+```markdown
 ## [0.1.12] - 2018-08-20
 - 0.1.11(342) -> 0.1.12(403)
 
