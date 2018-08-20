@@ -36,4 +36,7 @@
     <string name="pref_about_dependency_fa_title">FontAwesome</string>
     <string name="pref_about_dependency_fa_summary">Popular icon set and toolkit</string>
     <string name="pref_about_dependency_fa_url">https://fontawesome.com/</string>
+    <string name="pref_about_dependency_mpb_title">MaterialProgressBar</string>
+    <string name="pref_about_dependency_mpb_summary">Material Design ProgressBar with consistent appearance</string>
+    <string name="pref_about_dependency_mpb_url">https://github.com/DreaminginCodeZH/MaterialProgressBar</string>
 </resources>

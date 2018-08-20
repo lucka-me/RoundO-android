@@ -1,6 +1,18 @@
 <h1 align=center>更新日志</h1>
 
 ```markdown
+## [0.1.12] - 2018-08-20
+- 0.1.11(342) -> 0.1.12(403)
+
+### Finished
+- Progress Bar
+
+### Fixed
+- Lots of issues caused by loading mission data in wrong time
+- Menu not totally disabled when starting
+```
+
+```markdown
 ## [0.1.11] - 2018-08-20
 - 0.1.10(332) -> 0.1.11(342)
 

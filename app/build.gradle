@@ -5,14 +5,6 @@ apply plugin: 'kotlin-android'
 apply plugin: 'kotlin-android-extensions'
 
 android {
-    signingConfigs {
-        config {
-            keyAlias 'demokey'
-            keyPassword 'luckazhao'
-            storeFile file('/Tools/Android Project/Key/DemoKeyStore')
-            storePassword 'luckazhao'
-        }
-    }
     compileSdkVersion 27
     def newVersionCode = getVersionCode()
     defaultConfig {
@@ -20,14 +12,13 @@ android {
         minSdkVersion 21
         targetSdkVersion 27
         versionCode newVersionCode
-        versionName "0.1.11"
+        versionName "0.1.12"
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
     }
     buildTypes {
         release {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
-            signingConfig signingConfigs.config
         }
     }
 }
@@ -60,6 +51,9 @@ dependencies {
     implementation "org.jetbrains.anko:anko:$anko_version"
     // Android-Support-Preference-V7-Fix
     implementation 'com.takisoft.fix:preference-v7:27.1.1.1'
+    // MaterialProgressBar
+    //   Reference: https://github.com/DreaminginCodeZH/MaterialProgressBar
+    implementation 'me.zhanghai.android.materialprogressbar:library:1.4.2'
 
 }
 

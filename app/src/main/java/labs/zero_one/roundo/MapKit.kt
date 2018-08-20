@@ -259,7 +259,7 @@ class MapKit(private val context: Context) {
      * @since 0.1.10
      */
     fun changeMarkerIconAt(index: Int, type: MarkerType) {
-        if (isMapInitialized) {
+        if (isMapInitialized && index < markerList.size) {
             markerList[index].icon = markerIconList[type.iconIndex]
         } else {
             addOnMapInitialized {

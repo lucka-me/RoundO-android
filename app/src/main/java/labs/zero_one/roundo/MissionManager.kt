@@ -5,6 +5,8 @@ import android.content.Context
 import android.content.SharedPreferences
 import android.location.Location
 import android.support.v7.preference.PreferenceManager
+import android.util.Log
+import kotlinx.coroutines.experimental.delay
 import org.jetbrains.anko.doAsync
 import org.jetbrains.anko.uiThread
 import java.io.*
@@ -17,6 +19,7 @@ import kotlin.math.*
  *
  * ## 属性列表
  * - [waypointList]
+ * - [center]
  *
  * ## 子类列表
  * - [MissionListener]
@@ -40,6 +43,7 @@ import kotlin.math.*
 class MissionManager(private var context: Context, private val missionListener: MissionListener) {
 
     var waypointList: ArrayList<Waypoint> = ArrayList(0)
+    var center: Waypoint = Waypoint(0.0, 0.0)
     var status: MissionStatus = MissionStatus.Stopped
 
     /**
@@ -151,8 +155,10 @@ class MissionManager(private var context: Context, private val missionListener: 
     fun start(centerLocation: Location) {
 
         status = MissionStatus.Starting
+        center = Waypoint(centerLocation)
 
         doAsync {
+
             val sharedPreferences: SharedPreferences
             val missionRadius: Double
             val waypointCount: Int
@@ -181,14 +187,14 @@ class MissionManager(private var context: Context, private val missionListener: 
                 }
                 return@doAsync
             }
-            // Carry the list to ui thread first, instead of assign the waypointList here dirctly
-            // which may not working for unknown reason.
-            val newWaypointList = generateWaypointList(centerLocation, missionRadius, waypointCount)
+            waypointList = generateWaypointList(centerLocation, missionRadius, waypointCount)
+            // Just for demo
+            Thread.sleep(5000)
             uiThread {
-                waypointList = newWaypointList
                 status = MissionStatus.Started
                 missionListener.onStarted()
             }
+
         }
     }
 
@@ -225,6 +231,7 @@ class MissionManager(private var context: Context, private val missionListener: 
         try {
             tempFileOutputStream = FileOutputStream(tempFile)
             objectOutputStream = ObjectOutputStream(tempFileOutputStream)
+            objectOutputStream.writeObject(center)
             objectOutputStream.writeObject(waypointList)
             objectOutputStream.close()
             tempFileOutputStream.close()
@@ -246,6 +253,7 @@ class MissionManager(private var context: Context, private val missionListener: 
      * @since 0.1.4
      */
     fun resume() {
+        Log.i("TEST","resume() 正在恢复任务，状态：" + status)
 
         val tempFilename = context.getString(R.string.mission_temp_file)
         val tempFile = File(context.filesDir, tempFilename)
@@ -259,6 +267,7 @@ class MissionManager(private var context: Context, private val missionListener: 
         try {
             tempFileInputStream = FileInputStream(tempFile)
             objectInputStream = ObjectInputStream(tempFileInputStream)
+            center = objectInputStream.readObject() as Waypoint
             @Suppress("UNCHECKED_CAST")
             waypointList = objectInputStream.readObject() as ArrayList<Waypoint>
             objectInputStream.close()

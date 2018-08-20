@@ -7,9 +7,11 @@ import android.content.pm.PackageManager
 import android.location.Location
 import android.os.Bundle
 import android.provider.Settings
+import android.support.design.widget.AppBarLayout
 import android.support.v7.app.AppCompatActivity
 import android.view.Menu
 import android.view.MenuItem
+import android.view.View
 import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.android.synthetic.main.content_main.*
 
@@ -47,37 +49,38 @@ class MainActivity : AppCompatActivity() {
     private val mapKit = MapKit(this)
 
     // LocationKit
-    private val locationKitListener = object : LocationKit.LocationKitListener {
+    private val locationKitListener: LocationKit.LocationKitListener =
+        object : LocationKit.LocationKitListener {
 
-        override fun onLocationUpdated(location: Location) {
+            override fun onLocationUpdated(location: Location) {
 
-            if (!mapKit.isCameraFree) {
-                mapKit.moveTo(location)
+                if (!mapKit.isCameraFree) {
+                    mapKit.moveTo(location)
+                }
+
+                missionManager.reach(location)
+
             }
 
-            missionManager.reach(location)
-
-        }
-
-        override fun onProviderDisabled() {
-            val alert = AlertDialog.Builder(this@MainActivity)
-            alert.setTitle(getString(R.string.title_alert))
-            alert.setMessage(getString(R.string.location_provider_disabled))
-            alert.setCancelable(false)
-            alert.setPositiveButton(getString(R.string.permission_system_settings)) { _, _ ->
-                startActivity(Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS))
+            override fun onProviderDisabled() {
+                val alert = AlertDialog.Builder(this@MainActivity)
+                alert.setTitle(getString(R.string.title_alert))
+                alert.setMessage(getString(R.string.location_provider_disabled))
+                alert.setCancelable(false)
+                alert.setPositiveButton(getString(R.string.permission_system_settings)) { _, _ ->
+                    startActivity(Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS))
+                }
+                alert.setNegativeButton(getString(R.string.confirm), null)
+                alert.show()
             }
-            alert.setNegativeButton(getString(R.string.confirm), null)
-            alert.show()
-        }
 
-        override fun onProviderEnabled() {
+            override fun onProviderEnabled() {
 
-        }
+            }
 
-        override fun onException(error: Exception) {
+            override fun onException(error: Exception) {
 
-        }
+            }
     }
     private lateinit var locationKit: LocationKit
 
@@ -86,18 +89,35 @@ class MainActivity : AppCompatActivity() {
         object : MissionManager.MissionListener {
 
             override fun onStarted() {
+                var checkedCount = 0
                 for (waypoint in missionManager.waypointList) {
                     mapKit.addMarkerAt(
                         waypoint.location,
-                        if (waypoint.isChecked) MapKit.MarkerType.Checked
-                        else MapKit.MarkerType.Unchecked
+                        if (waypoint.isChecked) {
+                            checkedCount++
+                            MapKit.MarkerType.Checked
+                        } else {
+                            MapKit.MarkerType.Unchecked
+                        }
                     )
                 }
                 invalidateOptionsMenu()
+                // Update Progress Bar
+                progressBar.layoutParams.height = AppBarLayout.LayoutParams.WRAP_CONTENT
+                progressBar.requestLayout()
+                progressBar.isIndeterminate = false
+                progressBar.max = missionManager.waypointList.size
+                progressBar.progress = 0
+                progressBar.visibility = View.VISIBLE
+                progressBar.incrementProgressBy(checkedCount)
             }
 
             override fun onStopped() {
                 mapKit.clearMarkers()
+
+                progressBar.layoutParams.height = 0
+                progressBar.visibility = View.INVISIBLE
+
                 val alert = AlertDialog.Builder(this@MainActivity)
                 alert.setTitle("结束")
                 alert.setCancelable(false)
@@ -128,20 +148,19 @@ class MainActivity : AppCompatActivity() {
 
             override fun onChecked(indexList: List<Int>) {
                 // Update markers
-                var msg = "序号：" + indexList[0]
-                if (indexList.size > 1) {
-                    for (index in indexList) {
-                        msg += ", $index"
-                    }
+                var msg = "序号："
+                for (index in indexList) {
+                    msg += "$index "
+                    mapKit.changeMarkerIconAt(index, MapKit.MarkerType.Checked)
                 }
+
                 val alert = AlertDialog.Builder(this@MainActivity)
                 alert.setTitle("签到")
                 alert.setMessage(msg)
                 alert.setPositiveButton(getString(R.string.confirm), null)
                 alert.show()
-                for (index in indexList) {
-                    mapKit.changeMarkerIconAt(index, MapKit.MarkerType.Checked)
-                }
+
+                progressBar.incrementProgressBy(indexList.size)
             }
 
             override fun onFinishedAll() {
@@ -224,7 +243,10 @@ class MainActivity : AppCompatActivity() {
             buttonResetCamera.hide()
         }
         buttonResetCamera.setOnClickListener {
-            mapKit.moveTo(locationKit.lastLocation)
+            mapKit.moveTo(when(missionManager.status) {
+                MissionManager.MissionStatus.Started -> missionManager.center.location
+                else -> locationKit.lastLocation
+            })
             mapKit.isCameraFree = false
             buttonResetCamera.hide()
         }
@@ -234,6 +256,14 @@ class MainActivity : AppCompatActivity() {
                 buttonResetCamera.show()
             }
         }
+
+        // Setup Progress Bar
+        progressBar.visibility = View.INVISIBLE
+        progressBar.layoutParams.height = 0
+
+        // Resume mission
+        // Should resume mission here instead of in onPause()
+        missionManager.resume()
 
     }
 
@@ -245,7 +275,10 @@ class MainActivity : AppCompatActivity() {
     }
 
     override fun onResume() {
-        missionManager.resume()
+        /*
+        if (missionManager.status == MissionManager.MissionStatus.Stopped) {
+            missionManager.resume()
+        }*/
         locationKit.startUpdate()
         invalidateOptionsMenu()
 
@@ -267,7 +300,7 @@ class MainActivity : AppCompatActivity() {
                     .setIcon(R.drawable.ic_menu_stop)
                     .setTitle(R.string.menu_main_stop)
                     .isEnabled = false
-                menu.findItem(MainMenu.StartStop.id).isEnabled = false
+                menu.findItem(MainMenu.Preference.id).isEnabled = false
             }
 
             MissionManager.MissionStatus.Started -> {
@@ -275,7 +308,7 @@ class MainActivity : AppCompatActivity() {
                     .setIcon(R.drawable.ic_menu_stop)
                     .setTitle(R.string.menu_main_stop)
                     .isEnabled = true
-                menu.findItem(MainMenu.StartStop.id).isEnabled = true
+                menu.findItem(MainMenu.Preference.id).isEnabled = true
             }
 
             MissionManager.MissionStatus.Stopping -> {
@@ -283,7 +316,7 @@ class MainActivity : AppCompatActivity() {
                     .setIcon(R.drawable.ic_menu_start)
                     .setTitle(R.string.menu_main_start)
                     .isEnabled = false
-                menu.findItem(MainMenu.StartStop.id).isEnabled = false
+                menu.findItem(MainMenu.Preference.id).isEnabled = false
             }
 
             MissionManager.MissionStatus.Stopped -> {
@@ -291,7 +324,7 @@ class MainActivity : AppCompatActivity() {
                     .setIcon(R.drawable.ic_menu_start)
                     .setTitle(R.string.menu_main_start)
                     .isEnabled = true
-                menu.findItem(MainMenu.StartStop.id).isEnabled = true
+                menu.findItem(MainMenu.Preference.id).isEnabled = true
             }
         }
         return super.onPrepareOptionsMenu(menu)
@@ -306,6 +339,7 @@ class MainActivity : AppCompatActivity() {
 
                     MissionManager.MissionStatus.Started -> {
                         missionManager.stop()
+                        invalidateOptionsMenu()
                     }
 
                     MissionManager.MissionStatus.Stopped -> {
@@ -322,6 +356,7 @@ class MainActivity : AppCompatActivity() {
             }
 
             MainMenu.Preference.id -> {
+
                 val intent: Intent = Intent(this, PreferenceMainActivity::class.java)
                     .apply {  }
                 startActivity(intent)
@@ -341,8 +376,14 @@ class MainActivity : AppCompatActivity() {
 
             AppRequest.ActivitySetup.code -> {
                 if (resultCode == Activity.RESULT_OK) {
+                    // Show progress Bar
+                    progressBar.layoutParams.height = AppBarLayout.LayoutParams.WRAP_CONTENT
+                    progressBar.requestLayout()
+                    progressBar.isIndeterminate = true
+                    progressBar.visibility = View.VISIBLE
                     // Start Mission
                     missionManager.start(locationKit.lastLocation)
+                    invalidateOptionsMenu()
                 }
             }
 
