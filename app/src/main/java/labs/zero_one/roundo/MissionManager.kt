@@ -5,6 +5,7 @@ import android.content.Context
 import android.content.SharedPreferences
 import android.location.Location
 import android.support.v7.preference.PreferenceManager
+import com.takisoft.fix.support.v7.preference.TimePickerPreference
 import org.jetbrains.anko.doAsync
 import org.jetbrains.anko.uiThread
 import java.io.*
@@ -18,6 +19,8 @@ import kotlin.math.*
  * ## 属性列表
  * - [waypointList]
  * - [data]
+ * - [state]
+ * - [timer]
  *
  * ## 子类列表
  * - [MissionListener]
@@ -29,6 +32,9 @@ import kotlin.math.*
  * - [stop]
  * - [pause]
  * - [resume]
+ * - [setupTimer]
+ * - [stopTimer]
+ * - [onActivityResume]
  *
  * @param [context] 环境
  * @param [missionListener] 任务消息监听器
@@ -37,13 +43,17 @@ import kotlin.math.*
  * @since 0.1.4
  *
  * @property [waypointList] 任务点列表
+ * @property [data] 任务数据
  * @property [state] 任务状态
+ * @property [timer] 计时器
  */
 class MissionManager(private var context: Context, private val missionListener: MissionListener) {
 
     var waypointList: ArrayList<Waypoint> = ArrayList(0)
-    var data: MissionData = MissionData(Waypoint(Location("")), 0.0)
+    var data: MissionData =
+        MissionData(Waypoint(Location("")), 0.0, Date(), 0, 0)
     var state: MissionState = MissionState.Stopped
+    private var timer: Timer = Timer(true)
 
     /**
      * 任务消息监听器
@@ -54,6 +64,7 @@ class MissionManager(private var context: Context, private val missionListener: 
      * - [onStopped]
      * - [onStopFailed]
      * - [onChecked]
+     * - [onTimeUpdated]
      *
      * @author lucka-me
      * @since 0.1.4
@@ -104,7 +115,15 @@ class MissionManager(private var context: Context, private val missionListener: 
          * @author lucka-me
          * @since 0.1.10
          */
-        fun onFinishedAll()
+        fun onCheckedAll()
+
+        /**
+         * 耗时更新
+         *
+         * @author lucka-me
+         * @since 0.2
+         */
+        fun onTimeUpdated(pastTime: Long)
     }
 
     /**
@@ -115,6 +134,7 @@ class MissionManager(private var context: Context, private val missionListener: 
      * - [Started]
      * - [Stopping]
      * - [Stopped]
+     * - [Paused]
      *
      * @author lucka-me
      * @since 0.1.9
@@ -136,7 +156,11 @@ class MissionManager(private var context: Context, private val missionListener: 
         /**
          * 已结束（未开始）
          */
-        Stopped
+        Stopped,
+        /**
+         * 已暂停，即 Activity 不在顶层时（onPause() 后）
+         */
+        Paused
     }
 
     /**
@@ -144,11 +168,21 @@ class MissionManager(private var context: Context, private val missionListener: 
      *
      * @property [center] 中心位置
      * @property [radius] 任务圈半径
+     * @property [startTime] 开始时间
+     * @property [totalTime] 设定时间（秒）
+     * @property [pastTime] 已耗时（秒）
      *
      * @author lucka-me
      * @since 0.1.13
      */
-    data class MissionData(var center: Waypoint, var radius: Double): Serializable
+    data class MissionData(
+        var center: Waypoint,
+        var radius: Double,
+        var startTime: Date,
+        var totalTime: Int,
+        var pastTime: Int
+    ): Serializable
+
 
     /**
      * 开始任务
@@ -185,9 +219,18 @@ class MissionManager(private var context: Context, private val missionListener: 
                         context.getString(R.string.setup_basic_waypoint_count_default)
                     )
                     .toInt()
+                data.startTime = Date()
+                val cal = Calendar.getInstance()
+                cal.time = TimePickerPreference.FORMAT
+                    .parse(sharedPreferences.getString(
+                        context.getString(R.string.setup_basic_time_key),
+                        context.getString(R.string.setup_basic_time_default)))
+                data.totalTime =
+                    cal.get(Calendar.HOUR_OF_DAY) * 3600 + cal.get(Calendar.MINUTE) * 60
+                data.pastTime = 0
             } catch (error: Exception) {
+                state = MissionState.Stopped
                 uiThread {
-                    state = MissionState.Stopped
                     missionListener.onStartFailed(Exception(
                         context.getString(R.string.err_preference_fetch_failed)
                             + "\n"
@@ -199,9 +242,11 @@ class MissionManager(private var context: Context, private val missionListener: 
             waypointList = generateWaypointList(centerLocation, data.radius, waypointCount)
             // Just for demo
             Thread.sleep(5000)
+            state = MissionState.Started
             uiThread {
-                state = MissionState.Started
                 missionListener.onStarted()
+                // Setup timer
+                setupTimer()
             }
 
         }
@@ -214,6 +259,7 @@ class MissionManager(private var context: Context, private val missionListener: 
      * @since 0.1.4
      */
     fun stop() {
+        stopTimer()
         state = MissionState.Stopping
         doAsync {
             waypointList.clear()
@@ -231,6 +277,10 @@ class MissionManager(private var context: Context, private val missionListener: 
      * @since 0.1.4
      */
     fun pause() {
+        if (state == MissionState.Started) {
+            stopTimer()
+            state = MissionState.Paused
+        }
         // Serialize and save the waypointList
         val tempFilename = context.getString(R.string.mission_temp_file)
         val tempFile = File(context.filesDir, tempFilename)
@@ -285,6 +335,7 @@ class MissionManager(private var context: Context, private val missionListener: 
             } else {
                 state = MissionState.Started
                 missionListener.onStarted()
+                setupTimer()
             }
         } catch (error: Exception) {
             state = MissionState.Stopped
@@ -326,7 +377,7 @@ class MissionManager(private var context: Context, private val missionListener: 
                         waypointList[index].isChecked = true
                     }
                     missionListener.onChecked(checkedIndexList.toList())
-                    if (checkedTotal == waypointList.size) missionListener.onFinishedAll()
+                    if (checkedTotal == waypointList.size) missionListener.onCheckedAll()
                 }
             }
         }
@@ -375,6 +426,46 @@ class MissionManager(private var context: Context, private val missionListener: 
         }
 
         return resultList
+    }
+
+    private fun setupTimer() {
+        val period = data.totalTime * 1000 / waypointList.size
+        timer.schedule(object : TimerTask() {
+            override fun run() {
+                missionListener.onTimeUpdated(data.pastTime.toLong())
+            }
+        }, 0, period.toLong())
+        timer.schedule(object : TimerTask() {
+            override fun run() {
+                data.pastTime += 1
+            }
+        }, 0, 1000)
+    }
+
+    /**
+     * 停止计时器
+     *
+     * @see <a href="https://blog.csdn.net/lanxingfeifei/article/details/51775371">IllegalStateException: Timer was canceled | CSDN</a>
+     * @author lucka-me
+     * @since 0.2
+     */
+    private fun stopTimer() {
+        timer.cancel()
+        timer.purge()
+        timer = Timer(true)
+    }
+
+    /**
+     * 当 Activity 执行 onResume() 且任务处在暂停状态时恢复计时器
+     *
+     * @author lucka-me
+     * @since 0.2
+     */
+    fun onActivityResume() {
+        if (state == MissionState.Paused) {
+            state = MissionState.Started
+            setupTimer()
+        }
     }
 
 }

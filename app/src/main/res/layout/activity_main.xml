@@ -7,19 +7,7 @@
     android:layout_height="match_parent"
     tools:context=".MainActivity">
 
-    <android.support.design.widget.AppBarLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:theme="@style/AppTheme.AppBarOverlay">
 
-        <android.support.v7.widget.Toolbar
-            android:id="@+id/mainToolbar"
-            android:layout_width="match_parent"
-            android:layout_height="?attr/actionBarSize"
-            android:background="?attr/colorPrimary"
-            app:popupTheme="@style/AppTheme.PopupOverlay" />
-
-    </android.support.design.widget.AppBarLayout>
 
     <include
         android:id="@+id/include"
@@ -31,21 +19,6 @@
         android:layout_gravity="bottom|end"
         app:layout_anchor="@id/mapView"
         app:layout_anchorGravity="bottom|end">
-
-        <android.support.design.widget.FloatingActionButton
-            android:id="@+id/buttonDashboard"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_margin="@dimen/margin_standard"
-            android:clickable="true"
-            android:focusable="true"
-            android:tint="@android:color/white"
-            app:backgroundTint="@color/colorPrimary"
-            app:fabSize="normal"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:rippleColor="@color/colorPrimaryDark"
-            app:srcCompat="@drawable/ic_dashboard" />
 
         <android.support.design.widget.FloatingActionButton
             android:id="@+id/buttonResetCamera"
@@ -62,6 +35,21 @@
             app:rippleColor="@color/colorAccentDark"
             app:srcCompat="@drawable/ic_button_reset_camera" />
 
+        <android.support.design.widget.FloatingActionButton
+            android:id="@+id/buttonDashboard"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_margin="@dimen/margin_standard"
+            android:clickable="true"
+            android:focusable="true"
+            android:tint="@android:color/white"
+            app:backgroundTint="@color/colorPrimary"
+            app:fabSize="normal"
+            app:layout_constraintBottom_toTopOf="@id/buttonPreference"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:rippleColor="@color/colorPrimaryDark"
+            app:srcCompat="@drawable/ic_dashboard" />
+
         <me.zhanghai.android.materialprogressbar.MaterialProgressBar
             android:id="@+id/progressBar"
             style="@style/Widget.MaterialProgressBar.ProgressBar.Large.NoPadding"
@@ -77,6 +65,21 @@
             app:mpb_progressStyle="circular"
             app:mpb_setBothDrawables="true"
             app:mpb_useIntrinsicPadding="false" />
+
+        <android.support.design.widget.FloatingActionButton
+            android:id="@+id/buttonPreference"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_margin="@dimen/margin_standard"
+            android:clickable="true"
+            android:focusable="true"
+            android:tint="@android:color/white"
+            app:backgroundTint="@color/colorPrimary"
+            app:fabSize="normal"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:rippleColor="@color/colorPrimaryDark"
+            app:srcCompat="@drawable/ic_menu_preference" />
 
     </android.support.constraint.ConstraintLayout>
 

@@ -180,19 +180,21 @@ class MapKit(private val context: Context) {
     /**
      * 将地图中心移动至目标位置
      *
+     * ## Changelog
+     * ### 0.2
+     * - 添加参数 [resetBearing]
+     *
      * @param [location] 目标位置
+     * @param [resetBearing] 是否重置旋转，默认为是
      *
      * @author lucka-me
      * @since 0.1.6
      */
-    fun moveTo(location: Location){
+    fun moveTo(location: Location, resetBearing: Boolean = true){
         if (isMapInitialized) {
-            mineMap.animateCamera(CameraUpdateFactory.newCameraPosition(
-                CameraPosition
-                    .Builder()
-                    .target(LatLng(location))
-                    .build()
-            ))
+            var cameraBuilder = CameraPosition.Builder().target(LatLng(location))
+            if (resetBearing) cameraBuilder = cameraBuilder.bearing(0.0)
+            mineMap.animateCamera(CameraUpdateFactory.newCameraPosition(cameraBuilder.build()))
         } else {
             addOnMapInitialized {
                 moveTo(location)
@@ -301,12 +303,6 @@ class MapKit(private val context: Context) {
                 changeMarkerIconAt(index, type)
             }
         }
-        /*
-        if (!isMapInitialized && index < tempMarkerOptionsList.size) {
-            tempMarkerOptionsList[index].icon = markerIconList[type.iconIndex]
-        } else if (isMapInitialized && index < markerList.size) {
-            markerList[index].icon = markerIconList[type.iconIndex]
-        }*/
     }
 
     /**

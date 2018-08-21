@@ -9,40 +9,44 @@ import android.os.Bundle
 import android.provider.Settings
 import android.support.v4.content.ContextCompat
 import android.support.v7.app.AppCompatActivity
-import android.view.Menu
-import android.view.MenuItem
+import android.support.v7.preference.PreferenceManager
 import android.view.View
 import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.android.synthetic.main.content_main.*
 import kotlinx.android.synthetic.main.dialog_dashboard.view.*
+import java.util.*
 
 /**
  * 主页面 Activity
  *
  * ## 属性列表
+ * - [mapKit]
  * - [locationKit]
  * - [locationKitListener]
+ * - [missionManager]
+ * - [missionListener]
  *
  * ## 子类列表
- * - [MainMenu]
  * - [AppRequest]
  *
  * ## 重写方法列表
  * - [onCreate]
  * - [onPause]
  * - [onResume]
- * - [onCreateOptionsMenu]
- * - [onOptionsItemSelected]
  * - [onActivityResult]
  * - [onRequestPermissionsResult]
  *
  * ## 自定义方法列表
+ * - [openDashboard]
  *
  * @author lucka-me
  * @since 0.1
  *
+ * @property [mapKit] 地图工具
  * @property [locationKit] 位置工具
  * @property [locationKitListener] 位置工具消息监听器
+ * @property [missionManager] 任务管理器
+ * @property [missionListener] 任务消息监听器
  */
 class MainActivity : AppCompatActivity() {
 
@@ -57,7 +61,7 @@ class MainActivity : AppCompatActivity() {
 
                 if (!mapKit.isCameraFree &&
                     missionManager.state != MissionManager.MissionState.Started) {
-                    mapKit.moveTo(location)
+                    mapKit.moveTo(location, false)
                 }
 
                 missionManager.reach(location)
@@ -104,13 +108,18 @@ class MainActivity : AppCompatActivity() {
                     )
                 }
                 mapKit.resetZoomAndCenter(missionManager.waypointList)
-                invalidateOptionsMenu()
                 // Update Progress Bar
                 progressBar.isIndeterminate = false
                 progressBar.max = missionManager.waypointList.size
                 progressBar.progress = 0
+                progressBar.secondaryProgress = 0
                 progressBar.visibility = View.VISIBLE
                 progressBar.incrementProgressBy(checkedCount)
+                progressBar.incrementSecondaryProgressBy((
+                    missionManager.data.pastTime
+                        * missionManager.waypointList.size / missionManager.data.totalTime
+                    )
+                )
 
             }
 
@@ -125,7 +134,6 @@ class MainActivity : AppCompatActivity() {
                 alert.setCancelable(false)
                 alert.setPositiveButton(getString(R.string.confirm), null)
                 alert.show()
-                invalidateOptionsMenu()
             }
 
             override fun onStartFailed(error: Exception) {
@@ -135,7 +143,6 @@ class MainActivity : AppCompatActivity() {
                 alert.setCancelable(false)
                 alert.setPositiveButton(getString(R.string.confirm), null)
                 alert.show()
-                invalidateOptionsMenu()
             }
 
             override fun onStopFailed(error: Exception) {
@@ -145,7 +152,6 @@ class MainActivity : AppCompatActivity() {
                 alert.setCancelable(false)
                 alert.setPositiveButton(getString(R.string.confirm), null)
                 alert.show()
-                invalidateOptionsMenu()
             }
 
             override fun onChecked(indexList: List<Int>) {
@@ -165,7 +171,7 @@ class MainActivity : AppCompatActivity() {
                 progressBar.incrementProgressBy(indexList.size)
             }
 
-            override fun onFinishedAll() {
+            override fun onCheckedAll() {
                 val alert = AlertDialog.Builder(this@MainActivity)
                 alert.setTitle("全部完成！")
                 alert.setPositiveButton(getString(R.string.confirm), null)
@@ -173,30 +179,17 @@ class MainActivity : AppCompatActivity() {
                 missionManager.stop()
             }
 
+            override fun onTimeUpdated(pastTime: Long) {
+                progressBar.incrementSecondaryProgressBy(
+                    (1.0 * pastTime
+                        * missionManager.waypointList.size / missionManager.data.totalTime
+                        ).toInt() - progressBar.secondaryProgress
+                )
+
+            }
+
     }
     private val missionManager = MissionManager(this, missionListener)
-
-    /**
-     * 主菜单项
-     *
-     * ## Changelog
-     * ### 0.1.14
-     * - 废除 StartStop
-     *
-     * ## 列表
-     * - [Preference]
-     *
-     * @param [id] 菜单项资源 ID
-     *
-     * @author lucka
-     * @since 0.1
-     */
-    private enum class MainMenu(val id: Int) {
-        /**
-         * 设置
-         */
-        Preference(R.id.menu_main_preference)
-    }
 
     /**
      * 请求代码
@@ -228,7 +221,6 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
-        setSupportActionBar(mainToolbar)
 
         // Handle the permissions
         locationKit = LocationKit(this, locationKitListener)
@@ -271,6 +263,19 @@ class MainActivity : AppCompatActivity() {
                 }
             }
         }
+        buttonPreference.setOnClickListener {
+            when(missionManager.state) {
+                MissionManager.MissionState.Started, MissionManager.MissionState.Stopped -> {
+                    val intent: Intent = Intent(this, PreferenceMainActivity::class.java)
+                        .apply {  }
+                    startActivity(intent)
+                }
+                else -> {
+
+                }
+            }
+        }
+
 
         // Setup Progress Bar
         progressBar.visibility = View.INVISIBLE
@@ -282,67 +287,17 @@ class MainActivity : AppCompatActivity() {
     }
 
     override fun onPause() {
-        missionManager.pause()
         locationKit.stopUpdate()
+        missionManager.pause()
 
         super.onPause()
     }
 
     override fun onResume() {
-        /*
-        if (missionManager.status == MissionManager.MissionStatus.Stopped) {
-            missionManager.resume()
-        }*/
+        missionManager.onActivityResume()
         locationKit.startUpdate()
-        invalidateOptionsMenu()
 
         super.onResume()
-    }
-
-    override fun onCreateOptionsMenu(menu: Menu): Boolean {
-        // Inflate the menu; this adds items to the action bar if it is present.
-        menuInflater.inflate(R.menu.menu_main, menu)
-        return true
-    }
-
-    override fun onPrepareOptionsMenu(menu: Menu?): Boolean {
-        if (menu == null) return super.onPrepareOptionsMenu(menu)
-        when (missionManager.state) {
-
-            MissionManager.MissionState.Starting -> {
-                menu.findItem(MainMenu.Preference.id).isEnabled = false
-            }
-
-            MissionManager.MissionState.Started -> {
-                menu.findItem(MainMenu.Preference.id).isEnabled = true
-            }
-
-            MissionManager.MissionState.Stopping -> {
-                menu.findItem(MainMenu.Preference.id).isEnabled = false
-            }
-
-            MissionManager.MissionState.Stopped -> {
-                menu.findItem(MainMenu.Preference.id).isEnabled = true
-            }
-        }
-        return super.onPrepareOptionsMenu(menu)
-    }
-
-    // Handel the selection on Main Menu
-    override fun onOptionsItemSelected(item: MenuItem): Boolean {
-        when (item.itemId) {
-
-            MainMenu.Preference.id -> {
-
-                val intent: Intent = Intent(this, PreferenceMainActivity::class.java)
-                    .apply {  }
-                startActivity(intent)
-            }
-        }
-        return when (item.itemId) {
-            MainMenu.Preference.id -> true
-            else -> super.onOptionsItemSelected(item)
-        }
     }
 
     // Handle the activity result
@@ -358,7 +313,6 @@ class MainActivity : AppCompatActivity() {
                     progressBar.visibility = View.VISIBLE
                     // Start Mission
                     missionManager.start(locationKit.lastLocation)
-                    invalidateOptionsMenu()
                 }
             }
 
@@ -393,6 +347,9 @@ class MainActivity : AppCompatActivity() {
      * @since 0.1.14
      */
     private fun openDashboard() {
+        val showSecond = PreferenceManager
+            .getDefaultSharedPreferences(this)
+            .getBoolean(getString(R.string.pref_display_show_second_key), false)
         val dialogBuilder = AlertDialog.Builder(this)
             .setTitle(R.string.dashboard_title)
             .setIcon(getDrawable(R.drawable.ic_dashboard))
@@ -401,7 +358,9 @@ class MainActivity : AppCompatActivity() {
 
             var checkedCount = 0
             for (waypoint in missionManager.waypointList) if (waypoint.isChecked) checkedCount++
+
             // Setup layout
+            // Mission Progress
             val dashboardLayout = View.inflate(this, R.layout.dialog_dashboard, null)
             dashboardLayout.missionProgressBar.max = missionManager.waypointList.size
             dashboardLayout.missionProgressBar.progress = 0
@@ -410,6 +369,48 @@ class MainActivity : AppCompatActivity() {
                 checkedCount, missionManager.waypointList.size
             )
             dashboardLayout.missionProgressBar.incrementProgressBy(checkedCount)
+
+            // Mission Time
+            fun timeToString(second: Int): String {
+                val hrs: Int = second / 3600
+                val min: Int = (second - hrs * 3600) / 60
+                return if (showSecond) {
+                    val sec: Int = second - hrs * 3600 - min * 60
+                    String.format(getString(R.string.format_time_sec), hrs, min, sec)
+                } else {
+                    String.format(getString(R.string.format_time), hrs, min)
+                }
+            }
+
+            val realPastTime = ((Date().time - missionManager.data.startTime.time) / 1000).toInt()
+            val cal = Calendar.getInstance()
+            cal.time = missionManager.data.startTime
+            dashboardLayout.missionTimeProgressText.text = String.format(
+                getString(R.string.dashboard_mission_time_progress_text),
+                timeToString(missionManager.data.pastTime),
+                timeToString(missionManager.data.totalTime)
+            )
+            dashboardLayout.missionStartTimeText.text = if (showSecond) {
+                String.format(
+                    getString(R.string.format_time_sec),
+                    cal.get(Calendar.HOUR_OF_DAY),
+                    cal.get(Calendar.MINUTE),
+                    cal.get(Calendar.SECOND)
+                )
+            } else {
+                String.format(
+                    getString(R.string.format_time),
+                    cal.get(Calendar.HOUR_OF_DAY),
+                    cal.get(Calendar.MINUTE)
+                )
+            }
+            dashboardLayout.missionRealPastTimeText.text = timeToString(realPastTime)
+            dashboardLayout.missionTimeProgressBar.max = missionManager.data.totalTime
+            dashboardLayout.missionTimeProgressBar.progress = 0
+            dashboardLayout.missionTimeProgressBar.incrementProgressBy(missionManager.data.pastTime)
+            dashboardLayout.missionTimeProgressBar.secondaryProgress = 0
+            dashboardLayout.missionTimeProgressBar.incrementSecondaryProgressBy(realPastTime)
+
             // Build
             dialogBuilder
                 .setView(dashboardLayout)
@@ -429,6 +430,7 @@ class MainActivity : AppCompatActivity() {
                     val intent: Intent = Intent(this, SetupActivity::class.java)
                         .apply {  }
                     startActivityForResult(intent, AppRequest.ActivitySetup.code)
+                    overridePendingTransition(R.anim.slide_bottom_up, R.anim.slide_bottom_down)
                 }
                 .show()
 

@@ -9,6 +9,7 @@ import android.support.v7.preference.PreferenceManager
 import android.view.Menu
 import android.view.MenuItem
 import com.takisoft.fix.support.v7.preference.PreferenceFragmentCompat
+import org.jetbrains.anko.support.v4.defaultSharedPreferences
 
 /**
  * 准备界面的 Activity
@@ -20,6 +21,7 @@ import com.takisoft.fix.support.v7.preference.PreferenceFragmentCompat
  * - [onCreate]
  * - [onCreateOptionsMenu]
  * - [onOptionsItemSelected]
+ * - [onBackPressed]
  *
  * @author lucka-me
  * @since 0.1.2
@@ -93,11 +95,11 @@ class SetupActivity : AppCompatActivity() {
             SetupPreference.values().forEach { it : SetupPreference ->
                 setSummaryOf(it)
             }
-            preferenceScreen.sharedPreferences.registerOnSharedPreferenceChangeListener(this)
+            defaultSharedPreferences.registerOnSharedPreferenceChangeListener(this)
         }
 
         override fun onDestroy() {
-            preferenceScreen.sharedPreferences.unregisterOnSharedPreferenceChangeListener(this)
+            defaultSharedPreferences.unregisterOnSharedPreferenceChangeListener(this)
             super.onDestroy()
         }
 
@@ -132,17 +134,8 @@ class SetupActivity : AppCompatActivity() {
         private fun isValueLegal(preference: SetupPreference, value: String): Boolean  {
             return try {
                 when (preference) {
-
-                    SetupPreference.BasicRadius -> {
-                        val valueDouble = value.toDouble()
-                        valueDouble >= 0.1
-                    }
-
-                    SetupPreference.BasicWaypointCount -> {
-                        val valueInt = value.toInt()
-                        valueInt >= 1
-                    }
-
+                    SetupPreference.BasicRadius -> value.toDouble() >= 0.1
+                    SetupPreference.BasicWaypointCount -> value.toInt() >= 1
                 }
             } catch (error: Exception) {
                 false
@@ -158,10 +151,12 @@ class SetupActivity : AppCompatActivity() {
          * @since 0.1.4
          */
         private fun setSummaryOf(preference: SetupPreference) {
-            val sharedPreference = PreferenceManager.getDefaultSharedPreferences(context)
             findPreference(getString(preference.key)).summary = String.format(
                 getString(preference.summary),
-                sharedPreference.getString(getString(preference.key), getString(preference.default))
+                defaultSharedPreferences.getString(
+                    getString(preference.key),
+                    getString(preference.default)
+                )
             )
         }
 
@@ -174,8 +169,7 @@ class SetupActivity : AppCompatActivity() {
          * @since 0.1.8
          */
         private fun resetValue(preference: SetupPreference) {
-            PreferenceManager
-                .getDefaultSharedPreferences(context)
+            defaultSharedPreferences
                 .edit()
                 .putString(getString(preference.key), getString(preference.default))
                 .apply()
@@ -204,6 +198,7 @@ class SetupActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_preference)
+        supportActionBar?.setHomeAsUpIndicator(R.drawable.ic_close)
 
         if (savedInstanceState == null) {
             val preferenceFragment = SetupFragment()
@@ -241,6 +236,11 @@ class SetupActivity : AppCompatActivity() {
             }
         }
         return super.onOptionsItemSelected(item)
+    }
+
+    override fun onBackPressed() {
+        super.onBackPressed()
+        overridePendingTransition(R.anim.slide_bottom_up, R.anim.slide_bottom_down)
     }
 
 }

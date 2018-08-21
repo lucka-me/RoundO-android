@@ -62,9 +62,7 @@ class Waypoint(
      * @author lucka
      * @since 0.1.7
      */
-    constructor(location: Location, isChecked: Boolean = false) : this(location.longitude, location.latitude, isChecked) {
-
-    }
-
+    constructor(location: Location, isChecked: Boolean = false)
+        : this(location.longitude, location.latitude, isChecked)
 
 }

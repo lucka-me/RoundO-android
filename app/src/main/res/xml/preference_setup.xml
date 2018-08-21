@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
-<PreferenceScreen
-    xmlns:android="http://schemas.android.com/apk/res/android">
+<android.support.v7.preference.PreferenceScreen
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
 
     <PreferenceCategory android:title="@string/setup_basic_category_title">
 
@@ -16,6 +17,14 @@
             android:inputType="numberDecimal"
             android:key="@string/setup_basic_waypoint_count_key" />
 
+        <TimePickerPreference
+            android:key="@string/setup_basic_time_key"
+            android:title="@string/setup_basic_time_title"
+            android:summary="@string/setup_basic_time_title"
+            app:pref_hourFormat="h24"
+            app:pref_pickerTime="@string/setup_basic_time_default"
+            app:pref_summaryHasTime="@string/setup_basic_time_summary" />
+
     </PreferenceCategory>
 
-</PreferenceScreen>
+</android.support.v7.preference.PreferenceScreen>

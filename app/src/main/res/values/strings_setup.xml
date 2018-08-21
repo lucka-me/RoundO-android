@@ -15,5 +15,9 @@
     <string name="setup_basic_waypoint_count_summary">%s 个</string>
     <string name="setup_basic_waypoint_count_default">10</string>
     <string name="setup_basic_waypoint_count_warning">输入数值应大于0</string>
+    <string name="setup_basic_time_key">setup_basic_time</string>
+    <string name="setup_basic_time_title">任务时长</string>
+    <string name="setup_basic_time_summary">%s</string>
+    <string name="setup_basic_time_default">01:30</string>
 
 </resources>

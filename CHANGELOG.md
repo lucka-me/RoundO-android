@@ -1,6 +1,22 @@
 <h1 align=center>更新日志</h1>
 
 ```markdown
+## [0.2] - 2018-08-21
+- 0.1.14(463) -> 0.2(549)
+
+### Finished
+- Mission time including timer system in MissionManager and UI in Dashboard
+
+### Added
+- FAB for Preference
+- Pause state for mission
+- Animation for entering & exiting SetupActivity
+
+### Removed
+- Toolbar and MainMenu methods in MainActivity
+```
+
+```markdown
 ## [0.1.14] - 2018-08-21
 - 0.1.13(436) -> 0.1.14(463)
 

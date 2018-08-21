@@ -2,6 +2,11 @@
 <resources>
     <!-- Main Preference -->
     <string name="pref_main_title">设置</string>
+    
+    <string name="pref_display_category_title">显示</string>
+    <string name="pref_display_show_second_key">pref_display_show_second</string>
+    <string name="pref_display_show_second_title">显示秒</string>
+    <string name="pref_display_show_second_summary">在仪表盘中显示秒数</string>
 
     <string name="pref_other_category_title">其它</string>
     <string name="pref_other_about_key">pref_about</string>
