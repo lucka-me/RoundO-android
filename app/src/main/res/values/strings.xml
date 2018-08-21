@@ -5,14 +5,19 @@
     <string name="mission_temp_file">Mission.temp</string>
 
     <!-- Main Menu -->
-    <string name="menu_main_start">开始</string>
-    <string name="menu_main_stop">结束</string>
     <string name="menu_main_preference">设置</string>
 
     <!-- Dialog -->
-    <string name="title_alert">警告</string>
+    <string name="alert_title">警告</string>
     <string name="confirm">确认</string>
     <string name="cancel">取消</string>
+    <!-- Dashboard Dialog -->
+    <string name="dashboard_title">仪表盘</string>
+    <string name="dashboard_start">开始</string>
+    <string name="dashboard_stop">结束</string>
+    <string name="dashboard_mission_stopped">未开始任务。</string>
+    <string name="dashboard_mission_progress_title">任务进度</string>
+    <string name="dashboard_mission_progress_text">%d / %d</string>
 
     <!-- Permission -->
     <string name="permission_request_title">请求权限</string>

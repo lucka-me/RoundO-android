@@ -3,12 +3,6 @@
     xmlns:tools="http://schemas.android.com/tools"
     tools:context="labs.zero_one.roundo.MainActivity">
     <item
-        android:id="@+id/menu_main_start_stop"
-        android:orderInCategory="100"
-        android:title="@string/menu_main_start"
-        android:icon="@drawable/ic_menu_start"
-        app:showAsAction="ifRoom" />
-    <item
         android:id="@+id/menu_main_preference"
         android:orderInCategory="100"
         android:title="@string/menu_main_preference"

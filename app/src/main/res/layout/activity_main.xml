@@ -19,38 +19,66 @@
             android:background="?attr/colorPrimary"
             app:popupTheme="@style/AppTheme.PopupOverlay" />
 
-        <me.zhanghai.android.materialprogressbar.MaterialProgressBar
-            android:id="@+id/progressBar"
-            style="@style/Widget.MaterialProgressBar.ProgressBar.Horizontal.NoPadding"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_gravity="bottom"
-            android:indeterminate="false"
-            android:max="100"
-            android:progress="50"
-            app:mpb_setBothDrawables="true"
-            app:mpb_progressStyle="horizontal"
-            app:mpb_useIntrinsicPadding="false"
-            app:mpb_showProgressBackground="false"/>
-
     </android.support.design.widget.AppBarLayout>
 
     <include
         android:id="@+id/include"
         layout="@layout/content_main" />
 
-    <android.support.design.widget.FloatingActionButton
-        android:id="@+id/buttonResetCamera"
+    <android.support.constraint.ConstraintLayout
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="bottom|end"
-        android:layout_margin="@dimen/margin_standard"
-        android:tint="@android:color/white"
-        android:clickable="true"
-        android:focusable="true"
-        app:fabSize="normal"
-        app:backgroundTint="@color/colorAccent"
-        app:rippleColor="@color/colorAccentDark"
-        app:srcCompat="@drawable/ic_button_reset_camera" />
+        app:layout_anchor="@id/mapView"
+        app:layout_anchorGravity="bottom|end">
+
+        <android.support.design.widget.FloatingActionButton
+            android:id="@+id/buttonDashboard"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_margin="@dimen/margin_standard"
+            android:clickable="true"
+            android:focusable="true"
+            android:tint="@android:color/white"
+            app:backgroundTint="@color/colorPrimary"
+            app:fabSize="normal"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:rippleColor="@color/colorPrimaryDark"
+            app:srcCompat="@drawable/ic_dashboard" />
+
+        <android.support.design.widget.FloatingActionButton
+            android:id="@+id/buttonResetCamera"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_margin="@dimen/margin_standard"
+            android:clickable="true"
+            android:focusable="true"
+            android:tint="@android:color/white"
+            app:layout_constraintBottom_toTopOf="@id/buttonDashboard"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:backgroundTint="@color/colorAccent"
+            app:fabSize="normal"
+            app:rippleColor="@color/colorAccentDark"
+            app:srcCompat="@drawable/ic_button_reset_camera" />
+
+        <me.zhanghai.android.materialprogressbar.MaterialProgressBar
+            android:id="@+id/progressBar"
+            style="@style/Widget.MaterialProgressBar.ProgressBar.Large.NoPadding"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:indeterminate="false"
+            android:max="100"
+            android:progress="75"
+            app:layout_constraintBottom_toBottomOf="@+id/buttonDashboard"
+            app:layout_constraintEnd_toEndOf="@+id/buttonDashboard"
+            app:layout_constraintStart_toStartOf="@+id/buttonDashboard"
+            app:layout_constraintTop_toTopOf="@+id/buttonDashboard"
+            app:mpb_progressStyle="circular"
+            app:mpb_setBothDrawables="true"
+            app:mpb_useIntrinsicPadding="false" />
+
+    </android.support.constraint.ConstraintLayout>
+
 
 </android.support.design.widget.CoordinatorLayout>

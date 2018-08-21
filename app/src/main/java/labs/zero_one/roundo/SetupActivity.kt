@@ -2,10 +2,8 @@ package labs.zero_one.roundo
 
 import android.app.Activity
 import android.app.AlertDialog
-import android.content.Intent
 import android.content.SharedPreferences
 import android.os.Bundle
-import android.provider.Settings
 import android.support.v7.app.AppCompatActivity
 import android.support.v7.preference.PreferenceManager
 import android.view.Menu

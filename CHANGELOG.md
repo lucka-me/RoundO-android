@@ -1,6 +1,17 @@
 <h1 align=center>更新日志</h1>
 
 ```markdown
+## [0.1.14] - 2018-08-21
+- 0.1.13(436) -> 0.1.14(463)
+
+### Finished
+- Dashboard fab and dialog
+
+### Removed
+- Menu item StartStop, replaced by a button in Dashboard
+```
+
+```markdown
 ## [0.1.13] - 2018-08-20
 - 0.1.12(403) -> 0.1.13(436)
 

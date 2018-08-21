@@ -55,6 +55,15 @@
 
         <Preference
             android:icon="@drawable/ic_pref_about_dependency"
+            android:title="@string/pref_about_dependency_anko_title"
+            android:summary="@string/pref_about_dependency_anko_summary">
+            <intent
+                android:action="android.intent.action.VIEW"
+                android:data="@string/pref_about_dependency_anko_url" />
+        </Preference>
+
+        <Preference
+            android:icon="@drawable/ic_pref_about_dependency"
             android:title="@string/pref_about_dependency_prefFix_title"
             android:summary="@string/pref_about_dependency_prefFix_summary">
             <intent

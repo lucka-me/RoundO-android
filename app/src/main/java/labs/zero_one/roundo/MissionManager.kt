@@ -17,11 +17,11 @@ import kotlin.math.*
  *
  * ## 属性列表
  * - [waypointList]
- * - [center]
+ * - [data]
  *
  * ## 子类列表
  * - [MissionListener]
- * - [MissionStatus]
+ * - [MissionState]
  * - [MissionData]
  *
  * ## 方法列表
@@ -37,13 +37,13 @@ import kotlin.math.*
  * @since 0.1.4
  *
  * @property [waypointList] 任务点列表
- * @property [status] 任务状态
+ * @property [state] 任务状态
  */
 class MissionManager(private var context: Context, private val missionListener: MissionListener) {
 
     var waypointList: ArrayList<Waypoint> = ArrayList(0)
     var data: MissionData = MissionData(Waypoint(Location("")), 0.0)
-    var status: MissionStatus = MissionStatus.Stopped
+    var state: MissionState = MissionState.Stopped
 
     /**
      * 任务消息监听器
@@ -120,7 +120,7 @@ class MissionManager(private var context: Context, private val missionListener: 
      * @since 0.1.9
      *
      */
-    enum class MissionStatus {
+    enum class MissionState {
         /**
          * 正在开始
          */
@@ -164,7 +164,7 @@ class MissionManager(private var context: Context, private val missionListener: 
      */
     fun start(centerLocation: Location) {
 
-        status = MissionStatus.Starting
+        state = MissionState.Starting
         data.center = Waypoint(centerLocation)
 
         doAsync {
@@ -187,7 +187,7 @@ class MissionManager(private var context: Context, private val missionListener: 
                     .toInt()
             } catch (error: Exception) {
                 uiThread {
-                    status = MissionStatus.Stopped
+                    state = MissionState.Stopped
                     missionListener.onStartFailed(Exception(
                         context.getString(R.string.err_preference_fetch_failed)
                             + "\n"
@@ -200,7 +200,7 @@ class MissionManager(private var context: Context, private val missionListener: 
             // Just for demo
             Thread.sleep(5000)
             uiThread {
-                status = MissionStatus.Started
+                state = MissionState.Started
                 missionListener.onStarted()
             }
 
@@ -214,10 +214,10 @@ class MissionManager(private var context: Context, private val missionListener: 
      * @since 0.1.4
      */
     fun stop() {
-        status = MissionStatus.Stopping
+        state = MissionState.Stopping
         doAsync {
             waypointList.clear()
-            status = MissionStatus.Stopped
+            state = MissionState.Stopped
             uiThread {
                 missionListener.onStopped()
             }
@@ -246,7 +246,7 @@ class MissionManager(private var context: Context, private val missionListener: 
             tempFileOutputStream.close()
         } catch (error: Exception) {
             val alert = AlertDialog.Builder(context)
-            alert.setTitle(context.getString(R.string.title_alert))
+            alert.setTitle(context.getString(R.string.alert_title))
             alert.setMessage(error.message)
             alert.setCancelable(false)
             alert.setPositiveButton(context.getString(R.string.confirm), null)
@@ -281,15 +281,15 @@ class MissionManager(private var context: Context, private val missionListener: 
             objectInputStream.close()
             tempFileInputStream.close()
             if (waypointList.isEmpty()) {
-                status = MissionStatus.Stopped
+                state = MissionState.Stopped
             } else {
-                status = MissionStatus.Started
+                state = MissionState.Started
                 missionListener.onStarted()
             }
         } catch (error: Exception) {
-            status = MissionStatus.Stopped
+            state = MissionState.Stopped
             val alert = AlertDialog.Builder(context)
-            alert.setTitle(context.getString(R.string.title_alert))
+            alert.setTitle(context.getString(R.string.alert_title))
             alert.setMessage(error.message)
             alert.setCancelable(false)
             alert.setPositiveButton(context.getString(R.string.confirm), null)
@@ -306,7 +306,7 @@ class MissionManager(private var context: Context, private val missionListener: 
      * @since 0.1.10
      */
     fun reach(location: Location) {
-        if (status != MissionStatus.Started) return
+        if (state != MissionState.Started) return
         doAsync {
             val checkedIndexList: ArrayList<Int> = ArrayList(0)
             var checkedTotal = 0

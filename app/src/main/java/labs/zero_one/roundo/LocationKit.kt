@@ -295,7 +295,7 @@ class LocationKit(
             + 300.0 * sin(lng / 30.0 * PI)) * 2.0 / 3.0)
         val radLat = origLat / 180.0 * PI
         var magic = sin(radLat)
-        magic = 1 - ellipsoidEE * magic * magic;
+        magic = 1 - ellipsoidEE * magic * magic
         val sqrtMagic = sqrt(magic)
         dLat = (dLat * 180.0) / ((ellipsoidA * (1 - ellipsoidEE)) / (magic * sqrtMagic) * PI)
         dLng = (dLng * 180.0) / (ellipsoidA / sqrtMagic * cos(radLat) * PI)
