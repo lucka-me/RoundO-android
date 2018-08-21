@@ -11,6 +11,7 @@ import android.support.v4.content.ContextCompat
 import android.support.v7.app.AppCompatActivity
 import android.support.v7.preference.PreferenceManager
 import android.view.View
+import android.view.ViewGroup
 import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.android.synthetic.main.content_main.*
 import kotlinx.android.synthetic.main.dialog_dashboard.view.*
@@ -25,6 +26,7 @@ import java.util.*
  * - [locationKitListener]
  * - [missionManager]
  * - [missionListener]
+ * - [dashboardLayout]
  *
  * ## 子类列表
  * - [AppRequest]
@@ -47,6 +49,7 @@ import java.util.*
  * @property [locationKitListener] 位置工具消息监听器
  * @property [missionManager] 任务管理器
  * @property [missionListener] 任务消息监听器
+ * @property [dashboardLayout] 仪表盘视图
  */
 class MainActivity : AppCompatActivity() {
 
@@ -108,6 +111,8 @@ class MainActivity : AppCompatActivity() {
                     )
                 }
                 mapKit.resetZoomAndCenter(missionManager.waypointList)
+                initDashboard()
+                updateDashboard(checkedCount)
                 // Update Progress Bar
                 progressBar.isIndeterminate = false
                 progressBar.max = missionManager.waypointList.size
@@ -125,8 +130,6 @@ class MainActivity : AppCompatActivity() {
 
             override fun onStopped() {
                 mapKit.clearMarkers()
-
-                //progressBar.layoutParams.height = 0
                 progressBar.visibility = View.INVISIBLE
 
                 val alert = AlertDialog.Builder(this@MainActivity)
@@ -168,6 +171,7 @@ class MainActivity : AppCompatActivity() {
                 alert.setPositiveButton(getString(R.string.confirm), null)
                 alert.show()
 
+                updateDashboard(indexList.size)
                 progressBar.incrementProgressBy(indexList.size)
             }
 
@@ -180,6 +184,7 @@ class MainActivity : AppCompatActivity() {
             }
 
             override fun onTimeUpdated(pastTime: Long) {
+                updateDashboard(0)
                 progressBar.incrementSecondaryProgressBy(
                     (1.0 * pastTime
                         * missionManager.waypointList.size / missionManager.data.totalTime
@@ -188,8 +193,14 @@ class MainActivity : AppCompatActivity() {
 
             }
 
+            override fun onSecondUpdated() {
+                updateDashboard(0)
+            }
+
     }
     private val missionManager = MissionManager(this, missionListener)
+
+    private lateinit var dashboardLayout: View
 
     /**
      * 请求代码
@@ -221,6 +232,9 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
+
+        // Setup the dashboard layout
+        initDashboard()
 
         // Handle the permissions
         locationKit = LocationKit(this, locationKitListener)
@@ -343,86 +357,39 @@ class MainActivity : AppCompatActivity() {
     /**
      * 打开仪表盘对话框，若任务开始则显示仪表盘，否则显示未开始任务。
      *
+     * ## Changelog
+     * ### 0.2.1
+     * - 将 [dashboardLayout] 独立，实现实时刷新
+     *
      * @author lucka-me
      * @since 0.1.14
      */
     private fun openDashboard() {
-        val showSecond = PreferenceManager
-            .getDefaultSharedPreferences(this)
-            .getBoolean(getString(R.string.pref_display_show_second_key), false)
         val dialogBuilder = AlertDialog.Builder(this)
             .setTitle(R.string.dashboard_title)
             .setIcon(getDrawable(R.drawable.ic_dashboard))
-            .setPositiveButton(R.string.confirm, null)
+            .setPositiveButton(R.string.confirm) { dialog, _ ->
+                dialog.dismiss()
+                quitDashboardParent()
+            }
         val dashboard = if (missionManager.state == MissionManager.MissionState.Started) {
 
+            initDashboard()
             var checkedCount = 0
             for (waypoint in missionManager.waypointList) if (waypoint.isChecked) checkedCount++
+            updateDashboard(checkedCount, true)
 
-            // Setup layout
-            // Mission Progress
-            val dashboardLayout = View.inflate(this, R.layout.dialog_dashboard, null)
-            dashboardLayout.missionProgressBar.max = missionManager.waypointList.size
-            dashboardLayout.missionProgressBar.progress = 0
-            dashboardLayout.missionProgressText.text = String.format(
-                getString(R.string.dashboard_mission_progress_text),
-                checkedCount, missionManager.waypointList.size
-            )
-            dashboardLayout.missionProgressBar.incrementProgressBy(checkedCount)
-
-            // Mission Time
-            fun timeToString(second: Int): String {
-                val hrs: Int = second / 3600
-                val min: Int = (second - hrs * 3600) / 60
-                return if (showSecond) {
-                    val sec: Int = second - hrs * 3600 - min * 60
-                    String.format(getString(R.string.format_time_sec), hrs, min, sec)
-                } else {
-                    String.format(getString(R.string.format_time), hrs, min)
-                }
-            }
-
-            val realPastTime = ((Date().time - missionManager.data.startTime.time) / 1000).toInt()
-            val cal = Calendar.getInstance()
-            cal.time = missionManager.data.startTime
-            dashboardLayout.missionTimeProgressText.text = String.format(
-                getString(R.string.dashboard_mission_time_progress_text),
-                timeToString(missionManager.data.pastTime),
-                timeToString(missionManager.data.totalTime)
-            )
-            dashboardLayout.missionStartTimeText.text = if (showSecond) {
-                String.format(
-                    getString(R.string.format_time_sec),
-                    cal.get(Calendar.HOUR_OF_DAY),
-                    cal.get(Calendar.MINUTE),
-                    cal.get(Calendar.SECOND)
-                )
-            } else {
-                String.format(
-                    getString(R.string.format_time),
-                    cal.get(Calendar.HOUR_OF_DAY),
-                    cal.get(Calendar.MINUTE)
-                )
-            }
-            dashboardLayout.missionRealPastTimeText.text = timeToString(realPastTime)
-            dashboardLayout.missionTimeProgressBar.max = missionManager.data.totalTime
-            dashboardLayout.missionTimeProgressBar.progress = 0
-            dashboardLayout.missionTimeProgressBar.incrementProgressBy(missionManager.data.pastTime)
-            dashboardLayout.missionTimeProgressBar.secondaryProgress = 0
-            dashboardLayout.missionTimeProgressBar.incrementSecondaryProgressBy(realPastTime)
-
-            // Build
             dialogBuilder
                 .setView(dashboardLayout)
                 .setNegativeButton(R.string.dashboard_stop) { dialog, _ ->
                     dialog.dismiss()
+                    quitDashboardParent()
                     missionManager.stop()
                 }
                 .show()
 
         } else {
 
-            // Build
             dialogBuilder
                 .setMessage(R.string.dashboard_mission_stopped)
                 .setNegativeButton(R.string.dashboard_start) { dialog, _ ->
@@ -443,5 +410,112 @@ class MainActivity : AppCompatActivity() {
         dashboard
             .getButton(AlertDialog.BUTTON_NEGATIVE)
             .setTextColor(ContextCompat.getColor(this, R.color.colorPrimary))
+    }
+
+    /**
+     * 初始化仪表盘
+     *
+     * @author lucka-me
+     * @since 0.2.1
+     */
+    private fun initDashboard() {
+        dashboardLayout = View.inflate(this, R.layout.dialog_dashboard, null)
+
+        dashboardLayout.missionProgressBar.progress = 0
+        dashboardLayout.missionProgressBar.max = missionManager.waypointList.size
+        dashboardLayout.missionTimeProgressBar.progress = 0
+        dashboardLayout.missionTimeProgressBar.max = missionManager.data.totalTime
+        dashboardLayout.missionTimeProgressBar.secondaryProgress = 0
+    }
+
+    /**
+     * 更新仪表盘
+     *
+     * @param [checkedCount] 新签到的任务点数量
+     * @param [force] 强制更新
+     *
+     * @author lucka-me
+     * @since 0.2.1
+     */
+    private fun updateDashboard(checkedCount: Int, force: Boolean = false) {
+
+        if (!isDashboardShown() && !force) return
+
+        val showSecond = PreferenceManager
+            .getDefaultSharedPreferences(this)
+            .getBoolean(getString(R.string.pref_display_show_second_key), false)
+
+        dashboardLayout.missionProgressBar
+            .incrementProgressBy(checkedCount)
+        dashboardLayout.missionProgressText.text = String.format(
+            getString(R.string.dashboard_mission_progress_text),
+            dashboardLayout.missionProgressBar.progress, missionManager.waypointList.size
+        )
+
+        // Mission Time
+        val realPastTime = ((Date().time - missionManager.data.startTime.time) / 1000).toInt()
+        val cal = Calendar.getInstance()
+        cal.time = missionManager.data.startTime
+        dashboardLayout.missionTimeProgressText.text = String.format(
+            getString(R.string.dashboard_mission_time_progress_text),
+            timeToString(missionManager.data.pastTime, showSecond),
+            timeToString(missionManager.data.totalTime, showSecond)
+        )
+        dashboardLayout.missionStartTimeText.text = if (showSecond) {
+            String.format(
+                getString(R.string.format_time_sec),
+                cal.get(Calendar.HOUR_OF_DAY),
+                cal.get(Calendar.MINUTE),
+                cal.get(Calendar.SECOND)
+            )
+        } else {
+            String.format(
+                getString(R.string.format_time),
+                cal.get(Calendar.HOUR_OF_DAY),
+                cal.get(Calendar.MINUTE)
+            )
+        }
+        dashboardLayout.missionRealPastTimeText.text = timeToString(realPastTime, showSecond)
+        dashboardLayout.missionTimeProgressBar.incrementProgressBy(missionManager.data.pastTime
+            - dashboardLayout.missionTimeProgressBar.progress)
+        dashboardLayout.missionTimeProgressBar.incrementSecondaryProgressBy(realPastTime
+            - dashboardLayout.missionTimeProgressBar.secondaryProgress)
+
+    }
+
+    /**
+     * 将仪表盘从其亲视图移除，仅此才可以置入新的对话框视图中
+     *
+     * @see <a href="https://stackoverflow.com/a/28071422">Stack Overflow</a>
+     *
+     * @author lucka-me
+     * @since 0.2.1
+     */
+    private fun quitDashboardParent() {
+        if (isDashboardShown())
+            (dashboardLayout.parent as ViewGroup).removeView(dashboardLayout)
+    }
+
+    private fun isDashboardShown(): Boolean {
+        return dashboardLayout.parent != null
+    }
+
+    /**
+     * 将秒数转换成格式化字符串
+     *
+     * HH:mm:ss 或 HH:mm
+     *
+     * @author lucka-me
+     * @since 0.2.1
+     */
+    private fun timeToString(second: Int, showSecond: Boolean): String {
+        val hrs: Int = second / 3600
+        val min: Int = (second - hrs * 3600) / 60
+        return if (showSecond) {
+            val sec: Int = second - hrs * 3600 - min * 60
+            String.format(getString(R.string.format_time_sec), hrs, min, sec)
+        } else {
+            String.format(getString(R.string.format_time), hrs, min)
+        }
     }
 }

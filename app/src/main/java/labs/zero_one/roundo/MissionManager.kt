@@ -7,6 +7,7 @@ import android.location.Location
 import android.support.v7.preference.PreferenceManager
 import com.takisoft.fix.support.v7.preference.TimePickerPreference
 import org.jetbrains.anko.doAsync
+import org.jetbrains.anko.runOnUiThread
 import org.jetbrains.anko.uiThread
 import java.io.*
 import java.util.*
@@ -65,6 +66,7 @@ class MissionManager(private var context: Context, private val missionListener: 
      * - [onStopFailed]
      * - [onChecked]
      * - [onTimeUpdated]
+     * - [onSecondUpdated]
      *
      * @author lucka-me
      * @since 0.1.4
@@ -124,6 +126,14 @@ class MissionManager(private var context: Context, private val missionListener: 
          * @since 0.2
          */
         fun onTimeUpdated(pastTime: Long)
+
+        /**
+         * 计时器秒更新
+         *
+         * @author lucka-me
+         * @since 0.2.1
+         */
+        fun onSecondUpdated()
     }
 
     /**
@@ -432,12 +442,17 @@ class MissionManager(private var context: Context, private val missionListener: 
         val period = data.totalTime * 1000 / waypointList.size
         timer.schedule(object : TimerTask() {
             override fun run() {
-                missionListener.onTimeUpdated(data.pastTime.toLong())
+                context.runOnUiThread {
+                    missionListener.onTimeUpdated(data.pastTime.toLong())
+                }
             }
         }, 0, period.toLong())
         timer.schedule(object : TimerTask() {
             override fun run() {
                 data.pastTime += 1
+                context.runOnUiThread {
+                    missionListener.onSecondUpdated()
+                }
             }
         }, 0, 1000)
     }
