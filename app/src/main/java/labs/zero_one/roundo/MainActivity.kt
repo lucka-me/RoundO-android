@@ -8,6 +8,7 @@ import android.location.Location
 import android.os.Bundle
 import android.provider.Settings
 import android.support.v4.content.ContextCompat
+import android.support.v4.graphics.drawable.DrawableCompat
 import android.support.v7.app.AppCompatActivity
 import android.support.v7.preference.PreferenceManager
 import android.view.View
@@ -72,15 +73,15 @@ class MainActivity : AppCompatActivity() {
             }
 
             override fun onProviderDisabled() {
-                val alert = AlertDialog.Builder(this@MainActivity)
-                alert.setTitle(getString(R.string.alert_title))
-                alert.setMessage(getString(R.string.location_provider_disabled))
-                alert.setCancelable(false)
-                alert.setPositiveButton(getString(R.string.permission_system_settings)) { _, _ ->
-                    startActivity(Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS))
-                }
-                alert.setNegativeButton(getString(R.string.confirm), null)
-                alert.show()
+                DialogKit.showDialog(
+                    this@MainActivity,
+                    R.string.alert_title, R.string.location_provider_disabled, R.string.confirm,
+                    negativeButtonTextId = R.string.permission_system_settings,
+                    negativeButtonListener = {
+                        _, _ -> startActivity(Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS))
+                    },
+                    cancelable = false
+                )
             }
 
             override fun onProviderEnabled() {
@@ -140,47 +141,54 @@ class MainActivity : AppCompatActivity() {
             }
 
             override fun onStartFailed(error: Exception) {
-                val alert = AlertDialog.Builder(this@MainActivity)
-                alert.setTitle(getString(R.string.alert_title))
-                alert.setMessage(error.message)
-                alert.setCancelable(false)
-                alert.setPositiveButton(getString(R.string.confirm), null)
-                alert.show()
+                DialogKit.showSimpleAlert(this@MainActivity, error.message)
             }
 
             override fun onStopFailed(error: Exception) {
-                val alert = AlertDialog.Builder(this@MainActivity)
-                alert.setTitle(getString(R.string.alert_title))
-                alert.setMessage(error.message)
-                alert.setCancelable(false)
-                alert.setPositiveButton(getString(R.string.confirm), null)
-                alert.show()
+                DialogKit.showSimpleAlert(this@MainActivity, error.message)
             }
 
             override fun onChecked(indexList: List<Int>) {
                 // Update markers
-                var msg = "序号："
                 for (index in indexList) {
-                    msg += "$index "
                     mapKit.changeMarkerIconAt(index, MapKit.MarkerType.Checked)
                 }
 
-                val alert = AlertDialog.Builder(this@MainActivity)
-                alert.setTitle("签到")
-                alert.setMessage(msg)
-                alert.setPositiveButton(getString(R.string.confirm), null)
-                alert.show()
+                val icon = getDrawable(R.drawable.ic_check)
+                DrawableCompat.setTint(
+                    icon, ContextCompat.getColor(this@MainActivity, R.color.colorAccent)
+                )
+                DialogKit.showDialog(
+                    this@MainActivity,
+                    R.string.mission_checked_title,
+                    String.format(
+                        getString(R.string.mission_checked_message),
+                        indexList.size, missionManager.data.checked,
+                        missionManager.waypointList.size - missionManager.data.checked
+                    ),
+                    R.string.confirm,
+                    negativeButtonTextId = R.string.dashboard_title,
+                    negativeButtonListener = { _, _ ->
+                        if (!isDashboardShown()) openDashboard()
+                    },
+                    icon = icon
+                )
 
                 updateDashboard(indexList.size)
                 progressBar.incrementProgressBy(indexList.size)
             }
 
             override fun onCheckedAll() {
-                val alert = AlertDialog.Builder(this@MainActivity)
-                alert.setTitle("全部完成！")
-                alert.setPositiveButton(getString(R.string.confirm), null)
-                alert.show()
-                missionManager.stop()
+                DialogKit.showDialog(
+                    this@MainActivity,
+                    R.string.mission_all_checked_title,
+                    R.string.mission_all_checked_message,
+                    R.string.dashboard_title,
+                    positiveButtonListener = { _, _ ->
+                        if (!isDashboardShown()) openDashboard()
+                    },
+                    icon = getDrawable(R.drawable.ic_mission_all_checked)
+                )
             }
 
             override fun onTimeUpdated(pastTime: Long) {
@@ -365,9 +373,12 @@ class MainActivity : AppCompatActivity() {
      * @since 0.1.14
      */
     private fun openDashboard() {
+        val isDash = PreferenceManager
+            .getDefaultSharedPreferences(this)
+            .getBoolean(getString(R.string.pref_dash_enable_key), false)
         val dialogBuilder = AlertDialog.Builder(this)
-            .setTitle(R.string.dashboard_title)
-            .setIcon(getDrawable(R.drawable.ic_dashboard))
+            .setTitle(if (isDash) R.string.dashboard_title_ee else R.string.dashboard_title)
+            .setIcon(if (isDash) R.drawable.ic_dash else R.drawable.ic_dashboard)
             .setPositiveButton(R.string.confirm) { dialog, _ ->
                 dialog.dismiss()
                 quitDashboardParent()
@@ -384,7 +395,16 @@ class MainActivity : AppCompatActivity() {
                 .setNegativeButton(R.string.dashboard_stop) { dialog, _ ->
                     dialog.dismiss()
                     quitDashboardParent()
-                    missionManager.stop()
+                    DialogKit.showDialog(
+                        this,
+                        R.string.alert_title, R.string.mission_stop_confirm_message,
+                        R.string.confirm,
+                        positiveButtonListener = { _, _ ->
+                            missionManager.stop()
+                        },
+                        negativeButtonTextId = R.string.cancel,
+                        cancelable = false
+                    )
                 }
                 .show()
 
@@ -394,6 +414,7 @@ class MainActivity : AppCompatActivity() {
                 .setMessage(R.string.dashboard_mission_stopped)
                 .setNegativeButton(R.string.dashboard_start) { dialog, _ ->
                     dialog.dismiss()
+                    quitDashboardParent()
                     val intent: Intent = Intent(this, SetupActivity::class.java)
                         .apply {  }
                     startActivityForResult(intent, AppRequest.ActivitySetup.code)
@@ -404,6 +425,7 @@ class MainActivity : AppCompatActivity() {
         }
 
         // Set dialog style
+
         dashboard
             .getButton(AlertDialog.BUTTON_POSITIVE)
             .setTextColor(ContextCompat.getColor(this, R.color.colorPrimary))

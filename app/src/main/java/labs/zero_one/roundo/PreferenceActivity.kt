@@ -2,8 +2,12 @@ package labs.zero_one.roundo
 
 import android.content.SharedPreferences
 import android.os.Bundle
+import android.preference.Preference
+import android.support.design.widget.Snackbar
 import android.support.v7.app.AppCompatActivity
 import android.view.MenuItem
+import android.view.View
+import android.widget.Toast
 import com.takisoft.fix.support.v7.preference.PreferenceFragmentCompat
 import org.jetbrains.anko.support.v4.defaultSharedPreferences
 
@@ -127,6 +131,8 @@ class PreferenceAboutActivity : AppCompatActivity() {
      */
     class PreferenceAboutFragment : PreferenceFragmentCompat() {
 
+        var dashCount = 5;
+
         override fun onCreatePreferencesFix(savedInstanceState: Bundle?, rootKey: String?) {
             setPreferencesFromResource(R.xml.preference_about, rootKey)
             // Set the version information
@@ -140,6 +146,31 @@ class PreferenceAboutActivity : AppCompatActivity() {
                     versionName,
                     versionCode
                 )
+            findPreference(getString(R.string.pref_about_summary_version_key))
+                .onPreferenceClickListener =
+                android.support.v7.preference.Preference.OnPreferenceClickListener {
+                    dashCount--
+                    if (dashCount == 0) {
+                        val dashKey = getString(R.string.pref_dash_enable_key)
+                        defaultSharedPreferences
+                            .edit()
+                            .putBoolean(
+                                dashKey, !defaultSharedPreferences.getBoolean(dashKey, false)
+                            )
+                            .apply()
+                        dashCount = 5
+                        val thisView = view
+                        if (thisView != null) {
+                            if (defaultSharedPreferences.getBoolean(dashKey, false))
+                                Snackbar.make(
+                                    thisView,
+                                    R.string.pref_dash_enable_message,
+                                    Toast.LENGTH_SHORT
+                                ).show()
+                        }
+                    }
+                    true
+                }
         }
 
     }

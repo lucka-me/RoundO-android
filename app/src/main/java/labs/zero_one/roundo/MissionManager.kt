@@ -1,6 +1,5 @@
 package labs.zero_one.roundo
 
-import android.app.AlertDialog
 import android.content.Context
 import android.content.SharedPreferences
 import android.location.Location
@@ -51,8 +50,7 @@ import kotlin.math.*
 class MissionManager(private var context: Context, private val missionListener: MissionListener) {
 
     var waypointList: ArrayList<Waypoint> = ArrayList(0)
-    var data: MissionData =
-        MissionData(Waypoint(Location("")), 0.0, Date(), 0, 0)
+    var data: MissionData = MissionData()
     var state: MissionState = MissionState.Stopped
     private var timer: Timer = Timer(true)
 
@@ -186,11 +184,12 @@ class MissionManager(private var context: Context, private val missionListener: 
      * @since 0.1.13
      */
     data class MissionData(
-        var center: Waypoint,
-        var radius: Double,
-        var startTime: Date,
-        var totalTime: Int,
-        var pastTime: Int
+        var center: Waypoint = Waypoint(Location("")),
+        var radius: Double = 0.0,
+        var startTime: Date = Date(),
+        var totalTime: Int = 0,
+        var pastTime: Int = 0,
+        var checked: Int = 0
     ): Serializable
 
 
@@ -209,9 +208,9 @@ class MissionManager(private var context: Context, private val missionListener: 
     fun start(centerLocation: Location) {
 
         state = MissionState.Starting
-        data.center = Waypoint(centerLocation)
 
         doAsync {
+            data = MissionData(Waypoint(centerLocation))
 
             val sharedPreferences: SharedPreferences
             val waypointCount: Int
@@ -229,7 +228,6 @@ class MissionManager(private var context: Context, private val missionListener: 
                         context.getString(R.string.setup_basic_waypoint_count_default)
                     )
                     .toInt()
-                data.startTime = Date()
                 val cal = Calendar.getInstance()
                 cal.time = TimePickerPreference.FORMAT
                     .parse(sharedPreferences.getString(
@@ -237,7 +235,6 @@ class MissionManager(private var context: Context, private val missionListener: 
                         context.getString(R.string.setup_basic_time_default)))
                 data.totalTime =
                     cal.get(Calendar.HOUR_OF_DAY) * 3600 + cal.get(Calendar.MINUTE) * 60
-                data.pastTime = 0
             } catch (error: Exception) {
                 state = MissionState.Stopped
                 uiThread {
@@ -305,12 +302,7 @@ class MissionManager(private var context: Context, private val missionListener: 
             objectOutputStream.close()
             tempFileOutputStream.close()
         } catch (error: Exception) {
-            val alert = AlertDialog.Builder(context)
-            alert.setTitle(context.getString(R.string.alert_title))
-            alert.setMessage(error.message)
-            alert.setCancelable(false)
-            alert.setPositiveButton(context.getString(R.string.confirm), null)
-            alert.show()
+            DialogKit.showSimpleAlert(context, error.message)
         }
 
     }
@@ -349,12 +341,7 @@ class MissionManager(private var context: Context, private val missionListener: 
             }
         } catch (error: Exception) {
             state = MissionState.Stopped
-            val alert = AlertDialog.Builder(context)
-            alert.setTitle(context.getString(R.string.alert_title))
-            alert.setMessage(error.message)
-            alert.setCancelable(false)
-            alert.setPositiveButton(context.getString(R.string.confirm), null)
-            alert.show()
+            DialogKit.showSimpleAlert(context, error.message)
         }
     }
 
@@ -370,7 +357,7 @@ class MissionManager(private var context: Context, private val missionListener: 
         if (state != MissionState.Started) return
         doAsync {
             val checkedIndexList: ArrayList<Int> = ArrayList(0)
-            var checkedTotal = 0
+            var checkedCount = 0
             for (waypoint in waypointList) {
                 if (!waypoint.isChecked) {
                     if (location.distanceTo(waypoint.location) < 40) {
@@ -378,16 +365,13 @@ class MissionManager(private var context: Context, private val missionListener: 
                         waypoint.isChecked = true
                     }
                 }
-                checkedTotal += if (waypoint.isChecked) 1 else 0
+                checkedCount += if (waypoint.isChecked) 1 else 0
             }
+            data.checked += checkedIndexList.size
             uiThread {
                 if (checkedIndexList.isNotEmpty()) {
-                    // Unsure if is necessary
-                    for (index in checkedIndexList) {
-                        waypointList[index].isChecked = true
-                    }
                     missionListener.onChecked(checkedIndexList.toList())
-                    if (checkedTotal == waypointList.size) missionListener.onCheckedAll()
+                    if (checkedCount == waypointList.size) missionListener.onCheckedAll()
                 }
             }
         }

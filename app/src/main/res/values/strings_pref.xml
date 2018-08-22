@@ -15,6 +15,8 @@
     <!-- About -->
     <string name="pref_about_title">关于</string>
     <string name="pref_about_class_name">labs.zero_one.roundo.PreferenceAboutActivity</string>
+    <string name="pref_dash_enable_key">pref_dash_enable</string>
+    <string name="pref_dash_enable_message">About 20% cooler!</string>
     <string name="pref_about_summary_category_title">概要</string>
     <string name="pref_about_summary_version_key">pref_about_summary_version</string>
     <string name="pref_about_summary_version_title">版本</string>

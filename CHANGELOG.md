@@ -1,6 +1,15 @@
 <h1 align=center>更新日志</h1>
 
 ```markdown
+## [0.2.2] - 2018-08-22
+- 0.2.1(561) -> 0.2.2(580)
+
+### Finished
+- Checked dialog and all checked dialog
+- DialogKit to display dialogs in a simple way
+```
+
+```markdown
 ## [0.2.1] - 2018-08-22
 - 0.2(549) -> 0.2.1(561)
 
