@@ -158,7 +158,13 @@ class LocationKit(
         if (ActivityCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION) ==
             PackageManager.PERMISSION_GRANTED
         ) {
-            lastLocation = fixCoordinate(locationManager.getLastKnownLocation(locationProvider))
+            val location = locationManager.getLastKnownLocation(locationProvider)
+            if (location == null) {
+                lastLocation.longitude = 108.947031
+                lastLocation.latitude = 34.259441
+            } else {
+                lastLocation = fixCoordinate(location)
+            }
             locationListener.onLocationChanged(lastLocation)
             if (!locationManager.isProviderEnabled(locationProvider)) {
                 locationKitListener.onProviderDisabled()

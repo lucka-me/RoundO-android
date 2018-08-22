@@ -5,25 +5,34 @@
 
     <PreferenceCategory android:title="@string/setup_basic_category_title">
 
-        <EditTextPreference
+        <AutoSummaryEditTextPreference
+            android:key="@string/setup_basic_radius_key"
             android:title="@string/setup_basic_radius_title"
             android:defaultValue="@string/setup_basic_radius_default"
             android:inputType="numberDecimal"
-            android:key="@string/setup_basic_radius_key" />
+            app:pref_summaryHasText="@string/setup_basic_radius_summary" />
 
-        <EditTextPreference
+        <AutoSummaryEditTextPreference
+            android:key="@string/setup_basic_waypoint_count_key"
             android:title="@string/setup_basic_waypoint_count_title"
             android:defaultValue="@string/setup_basic_waypoint_count_default"
-            android:inputType="numberDecimal"
-            android:key="@string/setup_basic_waypoint_count_key" />
+            android:inputType="number"
+            app:pref_summaryHasText="@string/setup_basic_waypoint_count_summary" />
 
         <TimePickerPreference
             android:key="@string/setup_basic_time_key"
             android:title="@string/setup_basic_time_title"
-            android:summary="@string/setup_basic_time_title"
+            android:summary="@string/setup_basic_time_default"
             app:pref_hourFormat="h24"
             app:pref_pickerTime="@string/setup_basic_time_default"
             app:pref_summaryHasTime="@string/setup_basic_time_summary" />
+
+        <SwitchPreference
+            android:key="@string/setup_basic_sequential_key"
+            android:title="@string/setup_basic_sequential_title"
+            android:summary="@string/setup_basic_sequential_summary_true"
+            android:defaultValue="true" />
+
 
     </PreferenceCategory>
 

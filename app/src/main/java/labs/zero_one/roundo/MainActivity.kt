@@ -111,6 +111,9 @@ class MainActivity : AppCompatActivity() {
                         }
                     )
                 }
+                if (missionManager.data.sequential &&
+                    missionManager.data.checked < missionManager.waypointList.size
+                ) mapKit.changeMarkerIconAt(missionManager.data.checked, MapKit.MarkerType.Next)
                 mapKit.resetZoomAndCenter(missionManager.waypointList)
                 initDashboard()
                 updateDashboard(checkedCount)
@@ -153,6 +156,9 @@ class MainActivity : AppCompatActivity() {
                 for (index in indexList) {
                     mapKit.changeMarkerIconAt(index, MapKit.MarkerType.Checked)
                 }
+                if (missionManager.data.sequential &&
+                    missionManager.data.checked < missionManager.waypointList.size
+                ) mapKit.changeMarkerIconAt(missionManager.data.checked, MapKit.MarkerType.Next)
 
                 val icon = getDrawable(R.drawable.ic_check)
                 DrawableCompat.setTint(

@@ -1,11 +1,9 @@
 package labs.zero_one.roundo
 
 import android.app.Activity
-import android.app.AlertDialog
 import android.content.SharedPreferences
 import android.os.Bundle
 import android.support.v7.app.AppCompatActivity
-import android.support.v7.preference.PreferenceManager
 import android.view.Menu
 import android.view.MenuItem
 import com.takisoft.fix.support.v7.preference.PreferenceFragmentCompat
@@ -31,17 +29,15 @@ class SetupActivity : AppCompatActivity() {
     /**
      * 准备界面的 Fragment
      *
-     * ## 子类列表
-     * - [SetupPreference]
+     * ## Changelog
+     * ### 0.2.3
+     * - Replace EditTextPreference with AutoSummaryEditTextPreference and simplify the code
      *
      * ## 重写方法列表
      * - [onCreatePreferencesFix]
      * - [onDestroy]
-     * - [onSharedPreferenceChanged]
      *
      * ## 自定义方法列表
-     * - [isValueLegal]
-     * - [setSummaryOf]
      * - [resetValue]
      * - [warnIllegalValue]
      *
@@ -52,49 +48,19 @@ class SetupActivity : AppCompatActivity() {
         PreferenceFragmentCompat(),
         SharedPreferences.OnSharedPreferenceChangeListener {
 
-        /**
-         * 准备页面 Preference 字符串资源
-         *
-         * ## 列表
-         * - [BasicRadius]
-         * - [BasicWaypointCount]
-         *
-         * @param [key] Key 资源
-         * @param [summary] 介绍（格式）资源
-         * @param [default] 默认值资源
-         * @param [warning] 警告文本资源
-         *
-         * @author lucka
-         * @since 0.1.4
-         *
-         * @property [BasicRadius] 基本-任务圈半径
-         * @property [BasicWaypointCount] 基本-任务点数量
-         */
-        private enum class SetupPreference(
-            val key: Int, val summary: Int, val default: Int, val warning: Int
-        ) {
-            BasicRadius(
-                R.string.setup_basic_radius_key,
-                R.string.setup_basic_radius_summary,
-                R.string.setup_basic_radius_default,
-                R.string.setup_basic_radius_warning
-            ),
-            BasicWaypointCount(
-                R.string.setup_basic_waypoint_count_key,
-                R.string.setup_basic_waypoint_count_summary,
-                R.string.setup_basic_waypoint_count_default,
-                R.string.setup_basic_waypoint_count_warning
-            )
-        }
-
         override fun onCreatePreferencesFix(savedInstanceState: Bundle?, rootKey: String?) {
             setPreferencesFromResource(R.xml.preference_setup, rootKey)
 
-            // Set the summaries and listener
-            setSummaryOf(SetupPreference.BasicRadius)
-            SetupPreference.values().forEach { it : SetupPreference ->
-                setSummaryOf(it)
-            }
+            // Set the summaries
+            // Basic - Sequential
+            findPreference(getString(R.string.setup_basic_sequential_key)).summary =
+                if (defaultSharedPreferences.getBoolean(
+                        getString(R.string.setup_basic_sequential_key), false
+                    ))
+                    getString(R.string.setup_basic_sequential_summary_true)
+                else
+                    getString(R.string.setup_basic_sequential_summary_false)
+
             defaultSharedPreferences.registerOnSharedPreferenceChangeListener(this)
         }
 
@@ -103,94 +69,90 @@ class SetupActivity : AppCompatActivity() {
             super.onDestroy()
         }
 
-        // Update Summary when preference changed
-        override fun onSharedPreferenceChanged(sharedPreferences: SharedPreferences?, key: String?) {
-            if (key == null || sharedPreferences == null) return
-            val preference = when(key) {
-                getString(SetupPreference.BasicRadius.key) ->
-                    SetupPreference.BasicRadius
-                getString(SetupPreference.BasicWaypointCount.key) ->
-                    SetupPreference.BasicWaypointCount
-                else ->
-                    return
-            }
-            val value = sharedPreferences.getString(key, getString(preference.default))
-            if (!isValueLegal(preference, value)) {
-                resetValue(preference)
-                warnIllegalValue(preference, value)
-            }
-            setSummaryOf(preference)
-        }
+        override fun onSharedPreferenceChanged(
+            sharedPreferences: SharedPreferences?,
+            key: String?
+        ) {
+            if (sharedPreferences == null || key == null) return
+            when (key) {
 
-        /**
-         * 检查值是否合法
-         *
-         * @param [preference] 要检查的首选项所对应的 [SetupPreference]
-         * @param [value] 要检查的值
-         *
-         * @author lucka
-         * @since 0.1.8
-         */
-        private fun isValueLegal(preference: SetupPreference, value: String): Boolean  {
-            return try {
-                when (preference) {
-                    SetupPreference.BasicRadius -> value.toDouble() >= 0.1
-                    SetupPreference.BasicWaypointCount -> value.toInt() >= 1
+                getString(R.string.setup_basic_radius_key) -> {
+                    if (sharedPreferences.getString(
+                            key, getString(R.string.setup_basic_radius_default)
+                        ).toDouble() < 0.1
+                    ) {
+                        resetValue(key, getString(R.string.setup_basic_radius_default))
+                        warnIllegalValue(R.string.setup_basic_radius_warning)
+                    }
                 }
-            } catch (error: Exception) {
-                false
+
+                getString(R.string.setup_basic_waypoint_count_key) -> {
+                    if (sharedPreferences.getString(
+                            key, getString(R.string.setup_basic_waypoint_count_default)
+                        ).toInt() < 1
+                    ) {
+                        resetValue(key, getString(R.string.setup_basic_waypoint_count_default))
+                        warnIllegalValue(R.string.setup_basic_waypoint_count_warning)
+                    }
+                }
+
+                getString(R.string.setup_basic_sequential_key) -> {
+                    findPreference(key).summary =
+                        if (sharedPreferences.getBoolean(key, false))
+                            getString(R.string.setup_basic_sequential_summary_true)
+                        else
+                            getString(R.string.setup_basic_sequential_summary_false)
+                }
             }
         }
 
         /**
-         * 更新简介
+         * 重置首选项值（String）
          *
-         * @param [preference] 首选项所对应的 [SetupPreference]
+         * @param [key] 要重置的首选项的 Key
+         * @param [default] 首选项默认 String
          *
-         * @author lucka-me
-         * @since 0.1.4
-         */
-        private fun setSummaryOf(preference: SetupPreference) {
-            findPreference(getString(preference.key)).summary = String.format(
-                getString(preference.summary),
-                defaultSharedPreferences.getString(
-                    getString(preference.key),
-                    getString(preference.default)
-                )
-            )
-        }
-
-        /**
-         * 重置首选项值
-         *
-         * @param [preference] 要重置的首选项所对应的 [SetupPreference]
+         * @see <a href="https://stackoverflow.com/a/31671831">Refresh view after reset value | Stack Overflow</a>
          *
          * @author lucka-me
          * @since 0.1.8
          */
-        private fun resetValue(preference: SetupPreference) {
-            defaultSharedPreferences
-                .edit()
-                .putString(getString(preference.key), getString(preference.default))
-                .apply()
+        private fun resetValue(key: String, default: String) {
+            defaultSharedPreferences.edit().putString(key, default).apply()
+            preferenceScreen.removeAll()
+            addPreferencesFromResource(R.xml.preference_setup)
+        }
+
+        /**
+         * 重置首选项值（String）
+         *
+         * @param [key] 要重置的首选项的 Key ID
+         * @param [default] 首选项默认 String
+         *
+         * @author lucka-me
+         * @since 0.1.8
+         */
+        private fun resetValue(key: Int, default: String) {
+            resetValue(getString(key), default)
         }
 
         /**
          * 显示首选项值不合法对话框
          *
-         * @param [preference] 首选项所对应的 [SetupPreference]
-         * @param [value] 不合法的值
+         * ## Changelog
+         * ### 0.2.3
+         * - 使用 [DialogKit]
+         * - 简化使用，仅传入警告文本即可
+         *
+         * @param [warning] 警告文本 ID
          *
          * @author lucka-me
          * @since 0.1.8
          */
-        private fun warnIllegalValue(preference: SetupPreference, value: String) {
-            val alert = AlertDialog.Builder(context)
-            alert.setTitle(String.format(getString(R.string.title_setup_illegal_value), value))
-            alert.setMessage(getString(preference.warning))
-            alert.setCancelable(false)
-            alert.setPositiveButton(getString(R.string.confirm), null)
-            alert.show()
+        private fun warnIllegalValue(warning: Int) {
+            DialogKit.showDialog(
+                requireContext(), R.string.title_setup_illegal_value, warning, cancelable = false
+            )
         }
 
     }

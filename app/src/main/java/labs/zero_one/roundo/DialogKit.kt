@@ -25,6 +25,7 @@ class DialogKit {
          * @param [context] 环境
          * @param [titleId] 标题资源 ID
          * @param [message] 消息
+         * @param [positiveButtonTextId] PositiveButton 文字资源 ID，默认为「确认」
          * @param [positiveButtonListener] PositiveButton 点击监听器，可选
          * @param [negativeButtonTextId] NegativeButton 文字资源 ID，可选
          * @param [negativeButtonListener] NegativeButton 点击监听器，可选
@@ -37,7 +38,8 @@ class DialogKit {
          * @since 0.2.2
          */
         fun showDialog(
-            context: Context, titleId: Int, message: String?, positiveButtonTextId: Int,
+            context: Context, titleId: Int, message: String?,
+            positiveButtonTextId: Int = R.string.confirm,
             positiveButtonListener: ((DialogInterface, Int) -> (Unit))? = null,
             negativeButtonTextId: Int? = null,
             negativeButtonListener: ((DialogInterface, Int) -> (Unit))? = null,
@@ -64,7 +66,8 @@ class DialogKit {
          *
          * @param [context] 环境
          * @param [titleId] 标题资源 ID
-         * @param [message] 消息
+         * @param [messageId] 消息
+         * @param [positiveButtonTextId] PositiveButton 文字资源 ID，默认为「确认」
          * @param [positiveButtonListener] PositiveButton 点击监听器，可选
          * @param [negativeButtonTextId] NegativeButton 文字资源 ID，可选
          * @param [negativeButtonListener] NegativeButton 点击监听器，可选
@@ -75,7 +78,8 @@ class DialogKit {
          * @since 0.2.2
          */
         fun showDialog(
-            context: Context, titleId: Int, messageId: Int, positiveButtonTextId: Int,
+            context: Context, titleId: Int, messageId: Int,
+            positiveButtonTextId: Int = R.string.confirm,
             positiveButtonListener: ((DialogInterface, Int) -> (Unit))? = null,
             negativeButtonTextId: Int? = null,
             negativeButtonListener: ((DialogInterface, Int) -> (Unit))? = null,
@@ -102,7 +106,7 @@ class DialogKit {
          * @since 0.2.2
          */
         fun showSimpleAlert(context: Context, message: String?) {
-            showDialog(context, R.string.alert_title, message, R.string.confirm, cancelable = false)
+            showDialog(context, R.string.alert_title, message, cancelable = false)
         }
 
         /**

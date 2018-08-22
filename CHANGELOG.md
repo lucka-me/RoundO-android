@@ -1,6 +1,18 @@
 <h1 align=center>更新日志</h1>
 
 ```markdown
+## [0.2.3] - 2018-08-23
+- 0.2.2(580) -> 0.2.3(611)
+
+### Finished
+- Sequential mission
+
+### Fixed
+- App crashes when launch with location provider unavailable
+- In SetupActivity, contents don't refresh when the value is reset by code
+```
+
+```markdown
 ## [0.2.2] - 2018-08-22
 - 0.2.1(561) -> 0.2.2(580)
 

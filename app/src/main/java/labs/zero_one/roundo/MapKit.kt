@@ -69,6 +69,7 @@ class MapKit(private val context: Context) {
      * ## 列表
      * - [Unchecked] 未打卡点，橙色
      * - [Checked] 已打卡点，绿色
+     * - [Next] 下一个点，橙色叉
      *
      * @param [iconIndex] 图标在 [markerIconList] 中的序号
      *
@@ -77,7 +78,8 @@ class MapKit(private val context: Context) {
      */
     enum class MarkerType(val iconIndex: Int) {
         Unchecked(0),
-        Checked(1)
+        Checked(1),
+        Next(2)
     }
     private lateinit var markerIconList: Array<Icon>
 
@@ -99,7 +101,8 @@ class MapKit(private val context: Context) {
         )
         markerIconList = arrayOf(
             IconFactory.getInstance(context).fromResource(R.mipmap.ic_marker_unchecked),
-            IconFactory.getInstance(context).fromResource(R.mipmap.ic_marker_checked)
+            IconFactory.getInstance(context).fromResource(R.mipmap.ic_marker_checked),
+            IconFactory.getInstance(context).fromResource(R.mipmap.ic_marker_next)
         )
         mapView.onCreate(savedInstanceState)
         mapView.getMapAsync { newMap ->

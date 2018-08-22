@@ -175,6 +175,7 @@ class MissionManager(private var context: Context, private val missionListener: 
      * 任务基本信息
      *
      * @property [center] 中心位置
+     * @property [sequential] 是否为顺序任务
      * @property [radius] 任务圈半径
      * @property [startTime] 开始时间
      * @property [totalTime] 设定时间（秒）
@@ -185,6 +186,7 @@ class MissionManager(private var context: Context, private val missionListener: 
      */
     data class MissionData(
         var center: Waypoint = Waypoint(Location("")),
+        var sequential: Boolean = true,
         var radius: Double = 0.0,
         var startTime: Date = Date(),
         var totalTime: Int = 0,
@@ -235,6 +237,8 @@ class MissionManager(private var context: Context, private val missionListener: 
                         context.getString(R.string.setup_basic_time_default)))
                 data.totalTime =
                     cal.get(Calendar.HOUR_OF_DAY) * 3600 + cal.get(Calendar.MINUTE) * 60
+                data.sequential = sharedPreferences
+                    .getBoolean(context.getString(R.string.setup_basic_sequential_key), true)
             } catch (error: Exception) {
                 state = MissionState.Stopped
                 uiThread {
@@ -356,22 +360,35 @@ class MissionManager(private var context: Context, private val missionListener: 
     fun reach(location: Location) {
         if (state != MissionState.Started) return
         doAsync {
-            val checkedIndexList: ArrayList<Int> = ArrayList(0)
-            var checkedCount = 0
-            for (waypoint in waypointList) {
-                if (!waypoint.isChecked) {
-                    if (location.distanceTo(waypoint.location) < 40) {
-                        checkedIndexList.add(waypointList.indexOf(waypoint))
-                        waypoint.isChecked = true
+            val newCheckedIndexList: ArrayList<Int> = ArrayList(0)
+            var totalCheckedCount = 0
+            if (data.sequential) {
+                for (i: Int in data.checked until waypointList.size) {
+                    if (location.distanceTo(waypointList[i].location) < 40) {
+                        waypointList[i].isChecked = true
+                        newCheckedIndexList.add(i)
+                    } else {
+                        break
                     }
                 }
-                checkedCount += if (waypoint.isChecked) 1 else 0
+                data.checked += newCheckedIndexList.size
+                totalCheckedCount = data.checked
+            } else {
+                for (waypoint in waypointList) {
+                    if (!waypoint.isChecked) {
+                        if (location.distanceTo(waypoint.location) < 40) {
+                            newCheckedIndexList.add(waypointList.indexOf(waypoint))
+                            waypoint.isChecked = true
+                        }
+                    }
+                    totalCheckedCount += if (waypoint.isChecked) 1 else 0
+                }
+                data.checked += newCheckedIndexList.size
             }
-            data.checked += checkedIndexList.size
             uiThread {
-                if (checkedIndexList.isNotEmpty()) {
-                    missionListener.onChecked(checkedIndexList.toList())
-                    if (checkedCount == waypointList.size) missionListener.onCheckedAll()
+                if (newCheckedIndexList.isNotEmpty()) {
+                    missionListener.onChecked(newCheckedIndexList.toList())
+                    if (totalCheckedCount == waypointList.size) missionListener.onCheckedAll()
                 }
             }
         }
