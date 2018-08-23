@@ -1,6 +1,17 @@
 <h1 align=center>更新日志</h1>
 
 ```markdown
+## [0.3] - 2018-08-23
+- 0.2.3(611) -> 0.3(624)
+
+### Finished
+- Track Record: Algorithm (CORC) and part of functions
+
+### Changed
+- Waypoint -> GeoPoint, and CheckPoint & TrackPoint inherited from it
+```
+
+```markdown
 ## [0.2.3] - 2018-08-23
 - 0.2.2(580) -> 0.2.3(611)
 

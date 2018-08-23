@@ -209,17 +209,17 @@ class MapKit(private val context: Context) {
     /**
      * 重置缩放和中心
      *
-     * @param [waypointList] 任务点列表
+     * @param [checkPointList] 任务点列表
      *
      * @author lucka-me
      * @since 0.1.13
      */
-    fun resetZoomAndCenter(waypointList: ArrayList<Waypoint>) {
-        var latNorth = waypointList[0].location.latitude
-        var lonEast = waypointList[0].location.longitude
-        var latSouth = waypointList[0].location.latitude
-        var lonWest = waypointList[0].location.longitude
-        for (waypoint in waypointList) {
+    fun resetZoomAndCenter(checkPointList: ArrayList<CheckPoint>) {
+        var latNorth = checkPointList[0].location.latitude
+        var lonEast = checkPointList[0].location.longitude
+        var latSouth = checkPointList[0].location.latitude
+        var lonWest = checkPointList[0].location.longitude
+        for (waypoint in checkPointList) {
             latNorth = if (waypoint.location.latitude > latNorth) waypoint.location.latitude else latNorth
             lonEast = if (waypoint.location.longitude > lonEast) waypoint.location.longitude else lonEast
             latSouth = if (waypoint.location.latitude < latSouth) waypoint.location.latitude else latSouth

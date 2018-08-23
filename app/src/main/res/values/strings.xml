@@ -2,7 +2,7 @@
     <string name="app_name">RoundO</string>
     <string name="package_name">labs.zero_one.roundo</string>
     <string name="minemap_token">9282e20b60d248c5b0a2048ff39b625d</string>
-    <string name="mission_temp_file">Mission.temp</string>
+    <string name="mission_temp_file">Mission.data</string>
     <string name="format_time">%02d:%02d</string>
     <string name="format_time_sec">%02d:%02d:%02d</string>
 
@@ -27,11 +27,18 @@
     <string name="dashboard_mission_stopped">未开始任务。</string>
     <string name="dashboard_mission_progress_title">任务进度</string>
     <string name="dashboard_mission_progress_text">%d / %d</string>
-    <string name="dashboard_mission_time_title">时间</string>
-    <string name="dashboard_mission_time_progress_text">%s / %s</string>
-    <string name="dashboard_mission_total_time_title">总时间</string>
-    <string name="dashboard_mission_start_time_title">开始</string>
-    <string name="dashboard_mission_past_time_title">总耗时</string>
+    <string name="dashboard_mission_sequential_title_true">顺序任务</string>
+    <string name="dashboard_mission_sequential_title_false">非顺序任务</string>
+    <string name="dashboard_mission_sequential_text_true">前往指定任务点签到</string>
+    <string name="dashboard_mission_sequential_text_false">自由签到</string>
+    <string name="dashboard_time_title">时间</string>
+    <string name="dashboard_time_progress_text">%s / %s</string>
+    <string name="dashboard_time_target_title">总时间</string>
+    <string name="dashboard_time_start_title">开始</string>
+    <string name="dashboard_time_past_title">总耗时</string>
+    <string name="dashboard_distance_title">距离</string>
+    <string name="dashboard_distance_text_m">%3.2f 米</string>
+    <string name="dashboard_distance_text_km">%3.2f 千米</string>
 
     <!-- Permission -->
     <string name="permission_request_title">请求权限</string>

@@ -13,11 +13,11 @@
             app:pref_summaryHasText="@string/setup_basic_radius_summary" />
 
         <AutoSummaryEditTextPreference
-            android:key="@string/setup_basic_waypoint_count_key"
-            android:title="@string/setup_basic_waypoint_count_title"
-            android:defaultValue="@string/setup_basic_waypoint_count_default"
+            android:key="@string/setup_basic_checkpoint_count_key"
+            android:title="@string/setup_basic_checkpoint_count_title"
+            android:defaultValue="@string/setup_basic_checkpoint_count_default"
             android:inputType="number"
-            app:pref_summaryHasText="@string/setup_basic_waypoint_count_summary" />
+            app:pref_summaryHasText="@string/setup_basic_checkpoint_count_summary" />
 
         <TimePickerPreference
             android:key="@string/setup_basic_time_key"
@@ -31,7 +31,7 @@
             android:key="@string/setup_basic_sequential_key"
             android:title="@string/setup_basic_sequential_title"
             android:summary="@string/setup_basic_sequential_summary_true"
-            android:defaultValue="true" />
+            android:defaultValue="false" />
 
 
     </PreferenceCategory>

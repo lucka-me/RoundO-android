@@ -86,13 +86,13 @@ class SetupActivity : AppCompatActivity() {
                     }
                 }
 
-                getString(R.string.setup_basic_waypoint_count_key) -> {
+                getString(R.string.setup_basic_checkpoint_count_key) -> {
                     if (sharedPreferences.getString(
-                            key, getString(R.string.setup_basic_waypoint_count_default)
+                            key, getString(R.string.setup_basic_checkpoint_count_default)
                         ).toInt() < 1
                     ) {
-                        resetValue(key, getString(R.string.setup_basic_waypoint_count_default))
-                        warnIllegalValue(R.string.setup_basic_waypoint_count_warning)
+                        resetValue(key, getString(R.string.setup_basic_checkpoint_count_default))
+                        warnIllegalValue(R.string.setup_basic_checkpoint_count_warning)
                     }
                 }
 

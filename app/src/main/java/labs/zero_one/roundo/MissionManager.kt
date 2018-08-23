@@ -17,9 +17,10 @@ import kotlin.math.*
  * 任务管理器
  *
  * ## 属性列表
- * - [waypointList]
  * - [data]
  * - [state]
+ * - [checkPointList]
+ * - [trackPointList]
  * - [timer]
  *
  * ## 子类列表
@@ -42,16 +43,18 @@ import kotlin.math.*
  * @author lucka-me
  * @since 0.1.4
  *
- * @property [waypointList] 任务点列表
  * @property [data] 任务数据
  * @property [state] 任务状态
+ * @property [checkPointList] 任务点列表
+ * @property [trackPointList] 轨迹点列表
  * @property [timer] 计时器
  */
 class MissionManager(private var context: Context, private val missionListener: MissionListener) {
 
-    var waypointList: ArrayList<Waypoint> = ArrayList(0)
     var data: MissionData = MissionData()
     var state: MissionState = MissionState.Stopped
+    var checkPointList: ArrayList<CheckPoint> = ArrayList(0)
+    var trackPointList: ArrayList<TrackPoint> = ArrayList(0)
     private var timer: Timer = Timer(true)
 
     /**
@@ -174,26 +177,29 @@ class MissionManager(private var context: Context, private val missionListener: 
     /**
      * 任务基本信息
      *
+     * @property [started] 是否已开始，作为恢复任务时的依据
      * @property [center] 中心位置
      * @property [sequential] 是否为顺序任务
      * @property [radius] 任务圈半径
      * @property [startTime] 开始时间
-     * @property [totalTime] 设定时间（秒）
+     * @property [targetTime] 设定时间（秒）
      * @property [pastTime] 已耗时（秒）
+     * @property [checked] 已签到的数量
      *
      * @author lucka-me
      * @since 0.1.13
      */
     data class MissionData(
-        var center: Waypoint = Waypoint(Location("")),
+        var started: Boolean = false,
+        var center: GeoPoint = GeoPoint(Location("")),
         var sequential: Boolean = true,
         var radius: Double = 0.0,
         var startTime: Date = Date(),
-        var totalTime: Int = 0,
+        var targetTime: Int = 0,
         var pastTime: Int = 0,
-        var checked: Int = 0
+        var checked: Int = 0,
+        var distance: Double = 0.0
     ): Serializable
-
 
     /**
      * 开始任务
@@ -212,7 +218,8 @@ class MissionManager(private var context: Context, private val missionListener: 
         state = MissionState.Starting
 
         doAsync {
-            data = MissionData(Waypoint(centerLocation))
+
+            data = MissionData(center = GeoPoint(centerLocation))
 
             val sharedPreferences: SharedPreferences
             val waypointCount: Int
@@ -226,8 +233,8 @@ class MissionManager(private var context: Context, private val missionListener: 
                     .toDouble() * 1000 // km -> meter
                 waypointCount = sharedPreferences
                     .getString(
-                        context.getString(R.string.setup_basic_waypoint_count_key),
-                        context.getString(R.string.setup_basic_waypoint_count_default)
+                        context.getString(R.string.setup_basic_checkpoint_count_key),
+                        context.getString(R.string.setup_basic_checkpoint_count_default)
                     )
                     .toInt()
                 val cal = Calendar.getInstance()
@@ -235,10 +242,10 @@ class MissionManager(private var context: Context, private val missionListener: 
                     .parse(sharedPreferences.getString(
                         context.getString(R.string.setup_basic_time_key),
                         context.getString(R.string.setup_basic_time_default)))
-                data.totalTime =
+                data.targetTime =
                     cal.get(Calendar.HOUR_OF_DAY) * 3600 + cal.get(Calendar.MINUTE) * 60
                 data.sequential = sharedPreferences
-                    .getBoolean(context.getString(R.string.setup_basic_sequential_key), true)
+                    .getBoolean(context.getString(R.string.setup_basic_sequential_key), false)
             } catch (error: Exception) {
                 state = MissionState.Stopped
                 uiThread {
@@ -250,10 +257,12 @@ class MissionManager(private var context: Context, private val missionListener: 
                 }
                 return@doAsync
             }
-            waypointList = generateWaypointList(centerLocation, data.radius, waypointCount)
+            trackPointList.clear()
+            checkPointList = generateCheckPointList(centerLocation, data.radius, waypointCount)
             // Just for demo
             Thread.sleep(5000)
             state = MissionState.Started
+            data.started = true
             uiThread {
                 missionListener.onStarted()
                 // Setup timer
@@ -273,7 +282,7 @@ class MissionManager(private var context: Context, private val missionListener: 
         stopTimer()
         state = MissionState.Stopping
         doAsync {
-            waypointList.clear()
+            data.started = false
             state = MissionState.Stopped
             uiThread {
                 missionListener.onStopped()
@@ -292,7 +301,7 @@ class MissionManager(private var context: Context, private val missionListener: 
             stopTimer()
             state = MissionState.Paused
         }
-        // Serialize and save the waypointList
+        // Serialize and save the checkPointList
         val tempFilename = context.getString(R.string.mission_temp_file)
         val tempFile = File(context.filesDir, tempFilename)
         val tempFileOutputStream: FileOutputStream
@@ -302,7 +311,8 @@ class MissionManager(private var context: Context, private val missionListener: 
             tempFileOutputStream = FileOutputStream(tempFile)
             objectOutputStream = ObjectOutputStream(tempFileOutputStream)
             objectOutputStream.writeObject(data)
-            objectOutputStream.writeObject(waypointList)
+            objectOutputStream.writeObject(checkPointList)
+            objectOutputStream.writeObject(trackPointList)
             objectOutputStream.close()
             tempFileOutputStream.close()
         } catch (error: Exception) {
@@ -333,17 +343,20 @@ class MissionManager(private var context: Context, private val missionListener: 
             objectInputStream = ObjectInputStream(tempFileInputStream)
             data = objectInputStream.readObject() as MissionData
             @Suppress("UNCHECKED_CAST")
-            waypointList = objectInputStream.readObject() as ArrayList<Waypoint>
+            checkPointList = objectInputStream.readObject() as ArrayList<CheckPoint>
+            @Suppress("UNCHECKED_CAST")
+            trackPointList = objectInputStream.readObject() as ArrayList<TrackPoint>
             objectInputStream.close()
             tempFileInputStream.close()
-            if (waypointList.isEmpty()) {
-                state = MissionState.Stopped
-            } else {
+            if (data.started) {
                 state = MissionState.Started
                 missionListener.onStarted()
                 setupTimer()
+            } else {
+                state = MissionState.Stopped
             }
         } catch (error: Exception) {
+            data.started = false
             state = MissionState.Stopped
             DialogKit.showSimpleAlert(context, error.message)
         }
@@ -359,13 +372,18 @@ class MissionManager(private var context: Context, private val missionListener: 
      */
     fun reach(location: Location) {
         if (state != MissionState.Started) return
+        trackPointList.add(TrackPoint(location))
+        if (processCORC() && trackPointList.size > 2) {
+            data.distance += trackPointList[trackPointList.size - 1].location
+                .distanceTo(trackPointList[trackPointList.size - 2].location)
+        }
         doAsync {
             val newCheckedIndexList: ArrayList<Int> = ArrayList(0)
             var totalCheckedCount = 0
             if (data.sequential) {
-                for (i: Int in data.checked until waypointList.size) {
-                    if (location.distanceTo(waypointList[i].location) < 40) {
-                        waypointList[i].isChecked = true
+                for (i: Int in data.checked until checkPointList.size) {
+                    if (location.distanceTo(checkPointList[i].location) < 40) {
+                        checkPointList[i].isChecked = true
                         newCheckedIndexList.add(i)
                     } else {
                         break
@@ -374,10 +392,10 @@ class MissionManager(private var context: Context, private val missionListener: 
                 data.checked += newCheckedIndexList.size
                 totalCheckedCount = data.checked
             } else {
-                for (waypoint in waypointList) {
+                for (waypoint in checkPointList) {
                     if (!waypoint.isChecked) {
                         if (location.distanceTo(waypoint.location) < 40) {
-                            newCheckedIndexList.add(waypointList.indexOf(waypoint))
+                            newCheckedIndexList.add(checkPointList.indexOf(waypoint))
                             waypoint.isChecked = true
                         }
                     }
@@ -388,7 +406,7 @@ class MissionManager(private var context: Context, private val missionListener: 
             uiThread {
                 if (newCheckedIndexList.isNotEmpty()) {
                     missionListener.onChecked(newCheckedIndexList.toList())
-                    if (totalCheckedCount == waypointList.size) missionListener.onCheckedAll()
+                    if (totalCheckedCount == checkPointList.size) missionListener.onCheckedAll()
                 }
             }
         }
@@ -397,7 +415,7 @@ class MissionManager(private var context: Context, private val missionListener: 
     /**
      * 生成任务点列表
      *
-     * 注：直接在副线程中更新 [waypointList] 可能无效，原因未知
+     * 注：直接在副线程中更新 [checkPointList] 可能无效，原因未知
      *
      * @param [center] 中心点位置
      * @param [radius] 任务圈半径（米）
@@ -405,16 +423,16 @@ class MissionManager(private var context: Context, private val missionListener: 
      *
      * @return 生成的任务点列表
      *
-     * @see <a ref="http://www.geomidpoint.com/random/calculation.html">Calculation Method</a>
+     * @see <a href="http://www.geomidpoint.com/random/calculation.html">Calculation Method</a>
      *
      * @author lucka-me
      * @since 0.1.6
      */
-    private fun generateWaypointList(center: Location, radius: Double, count: Int): ArrayList<Waypoint> {
+    private fun generateCheckPointList(center: Location, radius: Double, count: Int): ArrayList<CheckPoint> {
 
         val random = Random()
 
-        val resultList: ArrayList<Waypoint> = ArrayList(0)
+        val resultList: ArrayList<CheckPoint> = ArrayList(0)
         // Convert center LatLng to radian
         val centerLatRad = Math.toRadians(center.latitude)
         val centerLngRad = Math.toRadians(center.longitude)
@@ -433,14 +451,14 @@ class MissionManager(private var context: Context, private val missionListener: 
             )
             radLng =
                 if (radLng < - PI) radLng + 2 * PI else if (radLng > PI) radLng - 2 * PI else radLng
-            resultList.add(Waypoint(Math.toDegrees(radLng), Math.toDegrees(radLat)))
+            resultList.add(CheckPoint(Math.toDegrees(radLng), Math.toDegrees(radLat)))
         }
 
         return resultList
     }
 
     private fun setupTimer() {
-        val period = data.totalTime * 1000 / waypointList.size
+        val period = data.targetTime * 1000 / checkPointList.size
         timer.schedule(object : TimerTask() {
             override fun run() {
                 context.runOnUiThread {
@@ -482,6 +500,51 @@ class MissionManager(private var context: Context, private val missionListener: 
             state = MissionState.Started
             setupTimer()
         }
+    }
+
+    /**
+     * 进行轨迹处理，累积偏移算法（CORC）
+     *
+     * @return 原轨迹中倒数第二个是否为冗余，若为冗余点则此点已删除
+     *
+     * @author lucka-me
+     * @since 0.3
+     *
+     * @see <a href="http://kns.cnki.net/kns/detail/detail.aspx?QueryID=7&CurRec=1&recid=&FileName=DQXX201402005&DbName=CJFD2014&DbCode=CJFQ&yx=&pr=&URLID=">论文 | 中国知网</a>
+     */
+    private fun processCORC(): Boolean {
+        if (trackPointList.size < 4) return true
+        val size = trackPointList.size
+        // 判断累积变向点或变向拐点
+        val angleA = abs(
+            trackPointList[size - 4].location
+                .bearingTo(trackPointList[size - 3].location)
+                - trackPointList[size - 3].location
+                .bearingTo(trackPointList[size - 2].location)
+        )
+        val angleB = abs(
+            trackPointList[size - 4].location
+                .bearingTo(trackPointList[size - 3].location)
+                - trackPointList[size - 2].location
+                .bearingTo(trackPointList[size - 1].location)
+        )
+        if ((angleA > 90 && angleA < 270) || (angleB > 90 && angleB < 270)) return true
+        // 海伦公式计算点到直线的距离
+        val distanceA =
+            trackPointList[size - 4].location.distanceTo(trackPointList[size - 3].location)
+        val distanceB =
+            trackPointList[size - 3].location.distanceTo(trackPointList[size - 2].location)
+        val distanceC =
+            trackPointList[size - 2].location.distanceTo(trackPointList[size - 4].location)
+        val s = (distanceA + distanceB + distanceC) / 2.0
+        val area = sqrt(s * (s - distanceA) * (s - distanceB) * (s - distanceC))
+        val d = area * 2.0 / distanceA
+        // CORC 累计偏移限差阈值
+        val thresholdT = 20
+        if (d >= thresholdT) return true
+        // 倒数第二个为冗余值
+        trackPointList.removeAt(size - 2)
+        return false
     }
 
 }

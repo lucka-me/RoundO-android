@@ -3,7 +3,7 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
-    android:layout_height="wrap_content">
+    android:layout_height="match_parent">
 
     <TextView
         android:id="@+id/missionProgressTitle"
@@ -42,28 +42,60 @@
         app:mpb_progressStyle="horizontal" />
 
     <TextView
-        android:id="@+id/missionTimeTitle"
+        android:id="@+id/missionSequentialTitle"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginStart="24dp"
         android:layout_marginTop="8dp"
-        android:text="@string/dashboard_mission_time_title"
-        android:textAppearance="@android:style/TextAppearance.Material.Medium"
+        android:text="@string/dashboard_mission_sequential_title_true"
+        android:textStyle="bold"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/missionProgressBar" />
 
     <TextView
-        android:id="@+id/missionTimeProgressText"
+        android:id="@+id/missionSequentialText"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="8dp"
+        android:text="@string/dashboard_mission_sequential_text_true"
+        app:layout_constraintBottom_toBottomOf="@+id/missionSequentialTitle"
+        app:layout_constraintStart_toEndOf="@+id/missionSequentialTitle" />
+
+    <View
+        android:id="@+id/dividerProgressTime"
+        android:layout_width="0dp"
+        android:layout_height="1dp"
+        android:layout_marginEnd="24dp"
+        android:layout_marginStart="24dp"
+        android:layout_marginTop="8dp"
+        android:background="?android:attr/listDivider"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/missionSequentialTitle" />
+
+    <TextView
+        android:id="@+id/timeTitle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="24dp"
+        android:layout_marginTop="8dp"
+        android:text="@string/dashboard_time_title"
+        android:textAppearance="@android:style/TextAppearance.Material.Medium"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/dividerProgressTime" />
+
+    <TextView
+        android:id="@+id/timeProgressText"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginEnd="24dp"
-        android:text="@string/dashboard_mission_time_progress_text"
+        android:text="@string/dashboard_time_progress_text"
         android:textAppearance="@android:style/TextAppearance.Material.Small"
-        app:layout_constraintBottom_toBottomOf="@+id/missionTimeTitle"
+        app:layout_constraintBottom_toBottomOf="@+id/timeTitle"
         app:layout_constraintEnd_toEndOf="parent" />
 
     <me.zhanghai.android.materialprogressbar.MaterialProgressBar
-        android:id="@+id/missionTimeProgressBar"
+        android:id="@+id/timeProgressBar"
         style="@style/Widget.MaterialProgressBar.ProgressBar.Horizontal"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -75,71 +107,112 @@
         android:secondaryProgress="75"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/missionTimeTitle"
+        app:layout_constraintTop_toBottomOf="@+id/timeTitle"
         app:mpb_progressStyle="horizontal" />
 
     <android.support.constraint.ConstraintLayout
-        android:id="@+id/missionTimeCol1"
+        android:id="@+id/timeCol1"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginBottom="8dp"
         android:layout_marginStart="24dp"
         android:layout_marginTop="8dp"
-        app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/missionTimeProgressBar">
+        app:layout_constraintTop_toBottomOf="@+id/timeProgressBar">
 
         <TextView
-            android:id="@+id/missionStartTimeTitle"
+            android:id="@+id/timeStartTitle"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="@string/dashboard_mission_start_time_title"
+            android:text="@string/dashboard_time_start_title"
             android:textAppearance="@android:style/TextAppearance.Material.Small"
             android:textStyle="bold"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
 
         <TextView
-            android:id="@+id/missionStartTimeText"
+            android:id="@+id/timeStartText"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginStart="8dp"
             android:text="@string/format_time"
-            app:layout_constraintBottom_toBottomOf="@+id/missionStartTimeTitle"
-            app:layout_constraintStart_toEndOf="@+id/missionStartTimeTitle" />
+            app:layout_constraintBottom_toBottomOf="@+id/timeStartTitle"
+            app:layout_constraintStart_toEndOf="@+id/timeStartTitle" />
 
     </android.support.constraint.ConstraintLayout>
 
+    <View
+        android:id="@+id/dividerTimeCol"
+        android:layout_width="1dp"
+        android:layout_height="0dp"
+        android:layout_marginStart="8dp"
+        android:background="?android:attr/listDivider"
+        app:layout_constraintBottom_toBottomOf="@+id/timeCol1"
+        app:layout_constraintStart_toEndOf="@+id/timeCol1"
+        app:layout_constraintTop_toTopOf="@+id/timeCol1" />
+
     <android.support.constraint.ConstraintLayout
-        android:id="@+id/missionTimeCol2"
+        android:id="@+id/timeCol2"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginEnd="24dp"
-        android:layout_marginStart="16dp"
+        android:layout_marginStart="8dp"
         android:layout_marginTop="8dp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.0"
-        app:layout_constraintStart_toEndOf="@+id/missionTimeCol1"
-        app:layout_constraintTop_toBottomOf="@+id/missionTimeProgressBar">
+        app:layout_constraintStart_toEndOf="@+id/dividerTimeCol"
+        app:layout_constraintTop_toBottomOf="@+id/timeProgressBar">
 
         <TextView
-            android:id="@+id/missionRealPastTimeTitle"
+            android:id="@+id/timeRealPastTitle"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="@string/dashboard_mission_past_time_title"
+            android:text="@string/dashboard_time_past_title"
             android:textAppearance="@android:style/TextAppearance.Material.Small"
             android:textStyle="bold"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
 
         <TextView
-            android:id="@+id/missionRealPastTimeText"
+            android:id="@+id/timeRealPastText"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginStart="8dp"
             android:text="@string/format_time"
-            app:layout_constraintBottom_toBottomOf="@+id/missionRealPastTimeTitle"
-            app:layout_constraintStart_toEndOf="@+id/missionRealPastTimeTitle" />
+            app:layout_constraintBottom_toBottomOf="@+id/timeRealPastTitle"
+            app:layout_constraintStart_toEndOf="@+id/timeRealPastTitle" />
     </android.support.constraint.ConstraintLayout>
+
+    <View
+        android:id="@+id/dividerTimeDistance"
+        android:layout_width="0dp"
+        android:layout_height="1dp"
+        android:layout_marginEnd="24dp"
+        android:layout_marginStart="24dp"
+        android:layout_marginTop="8dp"
+        android:background="?android:attr/listDivider"
+        android:visibility="visible"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/timeCol1" />
+
+    <TextView
+        android:id="@+id/distanceTitle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="24dp"
+        android:layout_marginTop="8dp"
+        android:text="@string/dashboard_distance_title"
+        android:textAppearance="@android:style/TextAppearance.Material.Medium"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/dividerTimeDistance" />
+
+    <TextView
+        android:id="@+id/distanceText"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginEnd="24dp"
+        android:text="@string/dashboard_distance_text_m"
+        app:layout_constraintBottom_toBottomOf="@+id/distanceTitle"
+        app:layout_constraintEnd_toEndOf="parent" />
 
 </android.support.constraint.ConstraintLayout>

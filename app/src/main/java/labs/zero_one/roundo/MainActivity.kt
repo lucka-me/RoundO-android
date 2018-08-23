@@ -99,12 +99,10 @@ class MainActivity : AppCompatActivity() {
         object : MissionManager.MissionListener {
 
             override fun onStarted() {
-                var checkedCount = 0
-                for (waypoint in missionManager.waypointList) {
+                for (waypoint in missionManager.checkPointList) {
                     mapKit.addMarkerAt(
                         waypoint.location,
                         if (waypoint.isChecked) {
-                            checkedCount++
                             MapKit.MarkerType.Checked
                         } else {
                             MapKit.MarkerType.Unchecked
@@ -112,21 +110,21 @@ class MainActivity : AppCompatActivity() {
                     )
                 }
                 if (missionManager.data.sequential &&
-                    missionManager.data.checked < missionManager.waypointList.size
+                    missionManager.data.checked < missionManager.checkPointList.size
                 ) mapKit.changeMarkerIconAt(missionManager.data.checked, MapKit.MarkerType.Next)
-                mapKit.resetZoomAndCenter(missionManager.waypointList)
+                mapKit.resetZoomAndCenter(missionManager.checkPointList)
                 initDashboard()
-                updateDashboard(checkedCount)
+                updateDashboard(missionManager.data.checked)
                 // Update Progress Bar
                 progressBar.isIndeterminate = false
-                progressBar.max = missionManager.waypointList.size
+                progressBar.max = missionManager.checkPointList.size
                 progressBar.progress = 0
                 progressBar.secondaryProgress = 0
                 progressBar.visibility = View.VISIBLE
-                progressBar.incrementProgressBy(checkedCount)
+                progressBar.incrementProgressBy(missionManager.data.checked)
                 progressBar.incrementSecondaryProgressBy((
                     missionManager.data.pastTime
-                        * missionManager.waypointList.size / missionManager.data.totalTime
+                        * missionManager.checkPointList.size / missionManager.data.targetTime
                     )
                 )
 
@@ -157,7 +155,7 @@ class MainActivity : AppCompatActivity() {
                     mapKit.changeMarkerIconAt(index, MapKit.MarkerType.Checked)
                 }
                 if (missionManager.data.sequential &&
-                    missionManager.data.checked < missionManager.waypointList.size
+                    missionManager.data.checked < missionManager.checkPointList.size
                 ) mapKit.changeMarkerIconAt(missionManager.data.checked, MapKit.MarkerType.Next)
 
                 val icon = getDrawable(R.drawable.ic_check)
@@ -170,7 +168,7 @@ class MainActivity : AppCompatActivity() {
                     String.format(
                         getString(R.string.mission_checked_message),
                         indexList.size, missionManager.data.checked,
-                        missionManager.waypointList.size - missionManager.data.checked
+                        missionManager.checkPointList.size - missionManager.data.checked
                     ),
                     R.string.confirm,
                     negativeButtonTextId = R.string.dashboard_title,
@@ -201,7 +199,7 @@ class MainActivity : AppCompatActivity() {
                 updateDashboard(0)
                 progressBar.incrementSecondaryProgressBy(
                     (1.0 * pastTime
-                        * missionManager.waypointList.size / missionManager.data.totalTime
+                        * missionManager.checkPointList.size / missionManager.data.targetTime
                         ).toInt() - progressBar.secondaryProgress
                 )
 
@@ -266,7 +264,7 @@ class MainActivity : AppCompatActivity() {
         buttonResetCamera.setOnClickListener {
             when(missionManager.state) {
                 MissionManager.MissionState.Started -> {
-                    mapKit.resetZoomAndCenter(missionManager.waypointList)
+                    mapKit.resetZoomAndCenter(missionManager.checkPointList)
                 }
                 else -> {
                     mapKit.moveTo(locationKit.lastLocation)
@@ -393,7 +391,7 @@ class MainActivity : AppCompatActivity() {
 
             initDashboard()
             var checkedCount = 0
-            for (waypoint in missionManager.waypointList) if (waypoint.isChecked) checkedCount++
+            for (waypoint in missionManager.checkPointList) if (waypoint.isChecked) checkedCount++
             updateDashboard(checkedCount, true)
 
             dialogBuilder
@@ -450,10 +448,20 @@ class MainActivity : AppCompatActivity() {
         dashboardLayout = View.inflate(this, R.layout.dialog_dashboard, null)
 
         dashboardLayout.missionProgressBar.progress = 0
-        dashboardLayout.missionProgressBar.max = missionManager.waypointList.size
-        dashboardLayout.missionTimeProgressBar.progress = 0
-        dashboardLayout.missionTimeProgressBar.max = missionManager.data.totalTime
-        dashboardLayout.missionTimeProgressBar.secondaryProgress = 0
+        dashboardLayout.missionProgressBar.max = missionManager.checkPointList.size
+        dashboardLayout.missionSequentialTitle.text =
+            getString(
+                if (missionManager.data.sequential) R.string.dashboard_mission_sequential_title_true
+                else R.string.dashboard_mission_sequential_title_false
+            )
+        dashboardLayout.missionSequentialText.text =
+            getString(
+                if (missionManager.data.sequential) R.string.dashboard_mission_sequential_text_true
+                else R.string.dashboard_mission_sequential_text_false
+            )
+        dashboardLayout.timeProgressBar.progress = 0
+        dashboardLayout.timeProgressBar.max = missionManager.data.targetTime
+        dashboardLayout.timeProgressBar.secondaryProgress = 0
     }
 
     /**
@@ -477,19 +485,19 @@ class MainActivity : AppCompatActivity() {
             .incrementProgressBy(checkedCount)
         dashboardLayout.missionProgressText.text = String.format(
             getString(R.string.dashboard_mission_progress_text),
-            dashboardLayout.missionProgressBar.progress, missionManager.waypointList.size
+            dashboardLayout.missionProgressBar.progress, missionManager.checkPointList.size
         )
 
         // Mission Time
         val realPastTime = ((Date().time - missionManager.data.startTime.time) / 1000).toInt()
         val cal = Calendar.getInstance()
         cal.time = missionManager.data.startTime
-        dashboardLayout.missionTimeProgressText.text = String.format(
-            getString(R.string.dashboard_mission_time_progress_text),
+        dashboardLayout.timeProgressText.text = String.format(
+            getString(R.string.dashboard_time_progress_text),
             timeToString(missionManager.data.pastTime, showSecond),
-            timeToString(missionManager.data.totalTime, showSecond)
+            timeToString(missionManager.data.targetTime, showSecond)
         )
-        dashboardLayout.missionStartTimeText.text = if (showSecond) {
+        dashboardLayout.timeStartText.text = if (showSecond) {
             String.format(
                 getString(R.string.format_time_sec),
                 cal.get(Calendar.HOUR_OF_DAY),
@@ -503,11 +511,24 @@ class MainActivity : AppCompatActivity() {
                 cal.get(Calendar.MINUTE)
             )
         }
-        dashboardLayout.missionRealPastTimeText.text = timeToString(realPastTime, showSecond)
-        dashboardLayout.missionTimeProgressBar.incrementProgressBy(missionManager.data.pastTime
-            - dashboardLayout.missionTimeProgressBar.progress)
-        dashboardLayout.missionTimeProgressBar.incrementSecondaryProgressBy(realPastTime
-            - dashboardLayout.missionTimeProgressBar.secondaryProgress)
+        dashboardLayout.timeRealPastText.text = timeToString(realPastTime, showSecond)
+        dashboardLayout.timeProgressBar.incrementProgressBy(missionManager.data.pastTime
+            - dashboardLayout.timeProgressBar.progress)
+        dashboardLayout.timeProgressBar.incrementSecondaryProgressBy(realPastTime
+            - dashboardLayout.timeProgressBar.secondaryProgress)
+
+        // Distance
+        dashboardLayout.distanceText.text = if (missionManager.data.distance > 1000) {
+            String.format(
+                getString(R.string.dashboard_distance_text_km),
+                missionManager.data.distance / 1000
+            )
+        } else {
+            String.format(
+                getString(R.string.dashboard_distance_text_m),
+                missionManager.data.distance
+            )
+        }
 
     }
 
