@@ -50,6 +50,7 @@ import kotlin.math.*
  * @property [ellipsoidEE] 椭球参数：扁率
  * @property [earthR] 地球平均半径（米）
  * @property [locationProvider] 定位 Provider
+ * @property [fixLocationProvider] 修正坐标后位置的 Provider
  */
 class LocationKit(
     private var context: Context,
@@ -63,7 +64,6 @@ class LocationKit(
     private val locationListener = object : LocationListener {
 
         override fun onLocationChanged(location: Location?) {
-
 
             if (TrumeKit.checkMock(location)) {
                 val error = Exception(context.getString(R.string.err_location_mock))
@@ -152,6 +152,9 @@ class LocationKit(
      * 初始化
      *
      * 设置初始坐标（西安）
+     *
+     * Note: 此处调用 getLastKnownLocation() 并修正坐标，会触发 onLocationChanged 并传入修正的坐标
+     *       可通过修改 Provider 进行标记
      *
      * @author lucka-me
      * @since 0.1.5
@@ -267,6 +270,7 @@ class LocationKit(
         const val ellipsoidEE = 0.00669342162296594323
         const val earthR = 6372796.924
         const val locationProvider = LocationManager.NETWORK_PROVIDER
+        const val fixLocationProvider = "fixed"
 
         /**
          * 将 WGS-84 坐标系转换为 GCJ-02 坐标系
@@ -282,6 +286,9 @@ class LocationKit(
          * - 修正算法
          * ### 0.3.1
          * - 作为静态函数提供
+         * ### 0.3.2
+         * - 不再修正参数 [location] 引用的对象
+         * - 将修正的坐标 Provider 修改为 fixed 以供辨识，避免二次修正，同时在修正前进行辨识
          *
          * @param [location] 待转换的位置
          *
@@ -293,11 +300,17 @@ class LocationKit(
          * @since 0.1.4
          */
         fun fixCoordinate(location: Location): Location {
+            // 避免二次修正
+            if (location.provider == fixLocationProvider) return Location(location)
             val origLat = location.latitude
             val origLng = location.longitude
             // 不在国内不做转换
-            if ((origLng < 72.004 || origLng > 137.8347) || (origLat < 0.8293 || origLat > 55.8271)) {
-                return location
+            if ((origLng < 72.004 || origLng > 137.8347) ||
+                (origLat < 0.8293 || origLat > 55.8271)
+            ) {
+                val newLocation = Location(location)
+                newLocation.provider = fixLocationProvider
+                return newLocation
             }
             val lat = origLat - 35.0
             val lng = origLng - 105.0
@@ -320,10 +333,11 @@ class LocationKit(
             dLng = (dLng * 180.0) / (ellipsoidA / sqrtMagic * cos(radLat) * PI)
             val fixedLat = origLat + dLat
             val fixedLng = origLng + dLng
-
-            location.latitude = fixedLat
-            location.longitude = fixedLng
-            return location
+            val newLocation = Location(location)
+            newLocation.provider = fixLocationProvider
+            newLocation.latitude = fixedLat
+            newLocation.longitude = fixedLng
+            return newLocation
         }
     }
 }

@@ -4,12 +4,10 @@ import android.content.Context
 import android.content.res.Resources
 import android.location.Location
 import android.os.Bundle
+import android.support.v4.content.ContextCompat
 import com.minemap.android.gestures.MoveGestureDetector
 import com.minemap.minemapsdk.MinemapAccountManager
-import com.minemap.minemapsdk.annotations.Icon
-import com.minemap.minemapsdk.annotations.IconFactory
-import com.minemap.minemapsdk.annotations.Marker
-import com.minemap.minemapsdk.annotations.MarkerOptions
+import com.minemap.minemapsdk.annotations.*
 import com.minemap.minemapsdk.camera.CameraPosition
 import com.minemap.minemapsdk.camera.CameraUpdateFactory
 import com.minemap.minemapsdk.geometry.LatLng
@@ -59,7 +57,7 @@ class MapKit(private val context: Context) {
     private lateinit var mineMap: MineMap
     private var isMapInitialized = false
     private var markerList: ArrayList<Marker> = ArrayList(0)
-    //private var tempMarkerOptionsList: ArrayList<MarkerOptions> = ArrayList(0)
+    private var trackPolyline: Polyline? = null
     private var onMapInitializedList: ArrayList<(MineMap) -> Unit> = ArrayList(0)
     var isCameraFree = false
 
@@ -109,11 +107,6 @@ class MapKit(private val context: Context) {
             if (newMap == null) throw Exception(context.getString(R.string.err_map_init_failed))
             mineMap = newMap
             isMapInitialized = true
-            /*
-            for (markerOptions in tempMarkerOptionsList) {
-                markerList.add(mineMap.addMarker(markerOptions))
-            }
-            tempMarkerOptionsList.clear()*/
             mineMap.setStyleUrl("http://minedata.cn/service/solu/style/id/4810")
             mineMap.uiSettings.isCompassEnabled = true
             mineMap.uiSettings.setCompassMargins(
@@ -257,7 +250,6 @@ class MapKit(private val context: Context) {
         if (isMapInitialized) {
             markerList.add(mineMap.addMarker(markerOptions))
         } else {
-            //tempMarkerOptionsList.add(markerOptions)
             addOnMapInitialized {
                 markerList.add(mineMap.addMarker(markerOptions))
             }
@@ -319,5 +311,46 @@ class MapKit(private val context: Context) {
             mineMap.removeMarker(marker)
         }
         markerList.clear()
+    }
+
+    /**
+     * 绘制轨迹
+     *
+     * @author lucka-me
+     * @since 0.3.2
+     */
+    fun drawTrack(trackPointList: ArrayList<TrackPoint>) {
+        if (isMapInitialized) {
+            val polylineOptions = PolylineOptions()
+                .color(ContextCompat.getColor(context, R.color.colorAccent))
+                .width(4.toFloat())
+            for (trackPoint in trackPointList) {
+                polylineOptions.add(LatLng(trackPoint.location))
+            }
+            trackPolyline = mineMap.addPolyline(polylineOptions)
+        } else {
+            addOnMapInitialized {
+                drawTrack(trackPointList)
+            }
+        }
+
+    }
+
+    /**
+     * 清除轨迹
+     *
+     * @author lucka-me
+     * @since 0.3.2
+     */
+    fun removeTrackPolyline() {
+        if (isMapInitialized) {
+            val thePolyline = trackPolyline
+            if (thePolyline != null) {
+                mineMap.removePolyline(thePolyline)
+                trackPolyline = null
+            }
+        } else {
+            addOnMapInitialized { removeTrackPolyline() }
+        }
     }
 }

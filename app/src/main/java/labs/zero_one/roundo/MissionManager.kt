@@ -76,10 +76,13 @@ class MissionManager(private var context: Context, private val missionListener: 
     interface MissionListener {
         /**
          * 任务开始
+         *
+         * @param [isResumed] 是否从恢复的任务中开始的
+         *
          * @author lucka-me
          * @since 0.1.4
          */
-        fun onStarted()
+        fun onStarted(isResumed: Boolean)
         /**
          * 任务开始失败
          *
@@ -265,7 +268,7 @@ class MissionManager(private var context: Context, private val missionListener: 
             state = MissionState.Started
             data.started = true
             uiThread {
-                missionListener.onStarted()
+                missionListener.onStarted(false)
                 // Setup timer
                 setupTimer()
             }
@@ -351,7 +354,7 @@ class MissionManager(private var context: Context, private val missionListener: 
             tempFileInputStream.close()
             if (data.started) {
                 state = MissionState.Started
-                missionListener.onStarted()
+                missionListener.onStarted(true)
                 setupTimer()
             } else {
                 state = MissionState.Stopped
@@ -360,6 +363,19 @@ class MissionManager(private var context: Context, private val missionListener: 
             data.started = false
             state = MissionState.Stopped
             DialogKit.showSimpleAlert(context, error.message)
+        }
+    }
+
+    /**
+     * 当 Activity 执行 onResume() 且任务处在暂停状态时恢复计时器
+     *
+     * @author lucka-me
+     * @since 0.2
+     */
+    fun onActivityResume() {
+        if (state == MissionState.Paused) {
+            state = MissionState.Started
+            setupTimer()
         }
     }
 
@@ -373,7 +389,7 @@ class MissionManager(private var context: Context, private val missionListener: 
      */
     fun reach(location: Location) {
         if (state != MissionState.Started) return
-        data.distance += processCORC(location)
+        data.distance += processCORC(location, trackPointList)
         Log.i("TEST","轨迹点数量：" + trackPointList.size)
         doAsync {
             val newCheckedIndexList: ArrayList<Int> = ArrayList(0)
@@ -487,93 +503,85 @@ class MissionManager(private var context: Context, private val missionListener: 
         timer = Timer(true)
     }
 
-    /**
-     * 当 Activity 执行 onResume() 且任务处在暂停状态时恢复计时器
-     *
-     * @author lucka-me
-     * @since 0.2
-     */
-    fun onActivityResume() {
-        if (state == MissionState.Paused) {
-            state = MissionState.Started
-            setupTimer()
-        }
-    }
+    companion object {
+        /**
+         * 进行轨迹处理，包括简单预处理（距离判断）和累积偏移算法（CORC）
+         *
+         * ## Changelog
+         * ### 0.3.1
+         * - 添加距离预处理
+         * - 直接传入新的位置并返回需要累加的距离，简化使用
+         * ### 0.3.2
+         * - 转为静态方法
+         *
+         * @param [newLocation] 新抵达的位置
+         * @param [trackPointList] 轨迹点列表
+         *
+         * @return 应累加的距离
+         *
+         * @author lucka-me
+         * @since 0.3
+         *
+         * @see <a href="http://kns.cnki.net/kns/detail/detail.aspx?QueryID=7&CurRec=1&recid=&FileName=DQXX201402005&DbName=CJFD2014&DbCode=CJFQ&yx=&pr=&URLID=">论文 | 中国知网</a>
+         */
+        private fun processCORC(newLocation: Location, trackPointList: ArrayList<TrackPoint>): Double {
+            // Add to list first
+            trackPointList.add(TrackPoint(newLocation))
+            // Keep the first
+            if (trackPointList.size <= 1) return 0.0
+            val size = trackPointList.size
+            // Remove the newest if the distance is too short
+            val distanceLast = trackPointList[size - 1].location
+                .distanceTo(trackPointList[size - 2].location).toDouble()
+            if (distanceLast < 10.0) {
+                Log.i("TEST", "距离过短：" + (size - 2) + " -> " + (size - 1) + ": " + distanceLast)
+                trackPointList.removeAt(size - 1)
+                return 0.0
+            }
+            // Keep the first and second
+            if (size == 2) return distanceLast
+            // The third should be executed by CORC when the fourth comes
+            if (size == 3) return 0.0
 
-    /**
-     * 进行轨迹处理，包括简单预处理（距离判断）和累积偏移算法（CORC）
-     *
-     * ## Changelog
-     * ### 0.3.1
-     * - 添加距离预处理
-     * - 直接传入新的位置并返回需要累加的距离，简化使用
-     *
-     * @param [location] 新抵达的位置
-     *
-     * @return 应累加的距离
-     *
-     * @author lucka-me
-     * @since 0.3
-     *
-     * @see <a href="http://kns.cnki.net/kns/detail/detail.aspx?QueryID=7&CurRec=1&recid=&FileName=DQXX201402005&DbName=CJFD2014&DbCode=CJFQ&yx=&pr=&URLID=">论文 | 中国知网</a>
-     */
-    private fun processCORC(location: Location): Double {
-        // Add to list first
-        trackPointList.add(TrackPoint(location))
-        // Keep the first
-        if (trackPointList.size <= 1) return 0.0
-        val size = trackPointList.size
-        // Remove the newest if the distance is too short
-        val distanceLast = trackPointList[size - 1].location
-            .distanceTo(trackPointList[size - 2].location).toDouble()
-        if (distanceLast < 2.0) {
-            Log.i("TEST", "距离过短：" + (size - 2) + " -> " + (size - 1) + ": " + distanceLast)
-            trackPointList.removeAt(size - 1)
+            // CORC Begin
+            // 如果为非冗余点，返回倒数第三个点和倒数第二个点（被判定点）的距离
+            // 第一步：判断累积变向点或变向拐点
+            val angleA = abs(
+                trackPointList[size - 4].location
+                    .bearingTo(trackPointList[size - 3].location)
+                    - trackPointList[size - 3].location
+                    .bearingTo(trackPointList[size - 2].location)
+            )
+            val angleB = abs(
+                trackPointList[size - 4].location
+                    .bearingTo(trackPointList[size - 3].location)
+                    - trackPointList[size - 2].location
+                    .bearingTo(trackPointList[size - 1].location)
+            )
+            // 倒数第三个点和倒数第二个点的距离，同时也用在海伦公式中
+            val distanceB = trackPointList[size - 3].location
+                .distanceTo(trackPointList[size - 2].location).toDouble()
+            if ((angleA > 90 && angleA < 270) || (angleB > 90 && angleB < 270)) return distanceB
+
+            // 第二步：累积偏移距离判断
+            // 海伦公式计算点到直线的距离
+            val distanceA = trackPointList[size - 4].location
+                .distanceTo(trackPointList[size - 3].location).toDouble()
+            val distanceC = trackPointList[size - 2].location
+                .distanceTo(trackPointList[size - 4].location).toDouble()
+            val s = (distanceA + distanceB + distanceC) / 2.0
+            val area = sqrt(s * (s - distanceA) * (s - distanceB) * (s - distanceC))
+            val d = area * 2.0 / distanceA
+            // CORC 累计偏移限差阈值
+            val thresholdT = 20
+            if (d >= thresholdT) {
+                Log.i("TEST", "CORC 保留第 " + (size - 2) + " 个点，距离：" + distanceB)
+                return distanceB
+            }
+            // 倒数第二个为冗余点
+            trackPointList.removeAt(size - 2)
             return 0.0
         }
-        // Keep the first and second
-        if (size == 2) return distanceLast
-        // The third should be executed by CORC when the fourth comes
-        if (size == 3) return 0.0
-
-        // CORC Begin
-        // 如果为非冗余点，返回倒数第三个点和倒数第二个点（被判定点）的距离
-        // 第一步：判断累积变向点或变向拐点
-        val angleA = abs(
-            trackPointList[size - 4].location
-                .bearingTo(trackPointList[size - 3].location)
-                - trackPointList[size - 3].location
-                .bearingTo(trackPointList[size - 2].location)
-        )
-        val angleB = abs(
-            trackPointList[size - 4].location
-                .bearingTo(trackPointList[size - 3].location)
-                - trackPointList[size - 2].location
-                .bearingTo(trackPointList[size - 1].location)
-        )
-        // 倒数第三个点和倒数第二个点的距离，同时也用在海伦公式中
-        val distanceB = trackPointList[size - 3].location
-            .distanceTo(trackPointList[size - 2].location).toDouble()
-        if ((angleA > 90 && angleA < 270) || (angleB > 90 && angleB < 270)) return distanceB
-
-        // 第二步：累积偏移距离判断
-        // 海伦公式计算点到直线的距离
-        val distanceA = trackPointList[size - 4].location
-            .distanceTo(trackPointList[size - 3].location).toDouble()
-        val distanceC = trackPointList[size - 2].location
-            .distanceTo(trackPointList[size - 4].location).toDouble()
-        val s = (distanceA + distanceB + distanceC) / 2.0
-        val area = sqrt(s * (s - distanceA) * (s - distanceB) * (s - distanceC))
-        val d = area * 2.0 / distanceA
-        // CORC 累计偏移限差阈值
-        val thresholdT = 20
-        if (d >= thresholdT) {
-            Log.i("TEST", "CORC 保留第 " + (size - 2) + " 个点，距离：" + distanceB)
-            return distanceB
-        }
-        // 倒数第二个为冗余点
-        trackPointList.removeAt(size - 2)
-        return 0.0
     }
 
 }

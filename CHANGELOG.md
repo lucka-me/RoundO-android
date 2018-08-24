@@ -1,6 +1,17 @@
 <h1 align=center>更新日志</h1>
 
 ```markdown
+## [0.3.2] - 2018-08-24
+- 0.3.1(640) -> 0.3.2(662)
+
+### Finished
+- Display track when mission stopped
+
+### Fixed
+- Location may be fixed twice when app launched
+```
+
+```markdown
 ## [0.3.1] - 2018-08-24
 - 0.3(624) -> 0.3.1(640)
 

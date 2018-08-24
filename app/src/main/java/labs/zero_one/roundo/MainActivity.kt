@@ -11,9 +11,9 @@ import android.support.v4.content.ContextCompat
 import android.support.v4.graphics.drawable.DrawableCompat
 import android.support.v7.app.AppCompatActivity
 import android.support.v7.preference.PreferenceManager
-import android.util.Log
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Toast
 import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.android.synthetic.main.content_main.*
 import kotlinx.android.synthetic.main.dialog_dashboard.view.*
@@ -99,7 +99,7 @@ class MainActivity : AppCompatActivity() {
     private val missionListener: MissionManager.MissionListener =
         object : MissionManager.MissionListener {
 
-            override fun onStarted() {
+            override fun onStarted(isResumed: Boolean) {
                 for (waypoint in missionManager.checkPointList) {
                     mapKit.addMarkerAt(
                         waypoint.location,
@@ -114,8 +114,6 @@ class MainActivity : AppCompatActivity() {
                     missionManager.data.checked < missionManager.checkPointList.size
                 ) mapKit.changeMarkerIconAt(missionManager.data.checked, MapKit.MarkerType.Next)
                 mapKit.resetZoomAndCenter(missionManager.checkPointList)
-                initDashboard()
-                updateDashboard(missionManager.data.checked)
                 // Update Progress Bar
                 progressBar.isIndeterminate = false
                 progressBar.max = missionManager.checkPointList.size
@@ -128,6 +126,13 @@ class MainActivity : AppCompatActivity() {
                         * missionManager.checkPointList.size / missionManager.data.targetTime
                     )
                 )
+                if (isResumed) {
+                    Toast.makeText(
+                        this@MainActivity, R.string.mission_resumed, Toast.LENGTH_LONG
+                    ).show()
+                } else {
+                    openDashboard()
+                }
                 // Update location
                 if (locationKit.isLocationAvailable)
                     missionManager.reach(locationKit.lastLocation)
@@ -135,7 +140,7 @@ class MainActivity : AppCompatActivity() {
             }
 
             override fun onStopped() {
-                mapKit.clearMarkers()
+                mapKit.drawTrack(missionManager.trackPointList)
                 progressBar.visibility = View.INVISIBLE
 
                 val alert = AlertDialog.Builder(this@MainActivity)
@@ -249,7 +254,7 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        // Setup the dashboard layout
+        // Initialize Dashboard
         initDashboard()
 
         // Handle the permissions
@@ -342,6 +347,8 @@ class MainActivity : AppCompatActivity() {
                     progressBar.isIndeterminate = true
                     progressBar.visibility = View.VISIBLE
                     // Start Mission
+                    mapKit.clearMarkers()
+                    mapKit.removeTrackPolyline()
                     missionManager.start(locationKit.lastLocation)
                 }
             }

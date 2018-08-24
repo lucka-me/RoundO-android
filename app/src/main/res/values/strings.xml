@@ -14,6 +14,7 @@
     <string name="confirm">确认</string>
     <string name="cancel">取消</string>
     <!-- Mission -->
+    <string name="mission_resumed">任务已恢复</string>
     <string name="mission_checked_title">签到</string>
     <string name="mission_checked_message">新签到 %d 个任务点，共签到 %d 个，剩余 %d 个。</string>
     <string name="mission_all_checked_title">全部完成</string>
