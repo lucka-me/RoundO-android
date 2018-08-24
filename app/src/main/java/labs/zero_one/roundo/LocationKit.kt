@@ -67,6 +67,7 @@ class LocationKit(
 
             if (TrumeKit.checkMock(location)) {
                 val error = Exception(context.getString(R.string.err_location_mock))
+                isLocationAvailable = false
                 locationKitListener.onException(error)
                 return
             }
@@ -75,6 +76,7 @@ class LocationKit(
                 return
             }
             lastLocation = fixCoordinate(location)
+            isLocationAvailable = true
             locationKitListener.onLocationUpdated(lastLocation)
             LatLng().wrap()
         }
@@ -162,16 +164,19 @@ class LocationKit(
             if (location == null) {
                 lastLocation.longitude = 108.947031
                 lastLocation.latitude = 34.259441
+                isLocationAvailable = false
             } else {
                 lastLocation = fixCoordinate(location)
+                isLocationAvailable = true
+                locationListener.onLocationChanged(lastLocation)
             }
-            locationListener.onLocationChanged(lastLocation)
             if (!locationManager.isProviderEnabled(locationProvider)) {
                 locationKitListener.onProviderDisabled()
             }
         } else {
             lastLocation.longitude = 108.947031
             lastLocation.latitude = 34.259441
+            isLocationAvailable = false
         }
     }
 
@@ -238,7 +243,7 @@ class LocationKit(
             locationManager.requestLocationUpdates(
                 locationProvider,
                 1000.toLong(),
-                5.toFloat(),
+                1.0.toFloat(),
                 locationListener
             )
             true
@@ -257,66 +262,68 @@ class LocationKit(
         locationManager.removeUpdates(locationListener)
     }
 
-    /**
-     * 将 WGS-84 坐标系转换为 GCJ-02 坐标系
-     *
-     * ## Changelog
-     * ### 0.1.5
-     * - [Location] 改为非空类型
-     * ### 0.1.6
-     * - 参数 [location] 引用的对象也会被转换
-     * ### 0.1.7
-     * - [Math.PI] -> [PI]
-     * ### 0.1.10
-     * - 修正算法
-     *
-     * @param [location] 待转换的位置
-     *
-     * @return 转换后的位置
-     *
-     * @see <a href="https://github.com/geosmart/coordtransform/blob/master/src/main/java/me/demo/util/geo/CoordinateTransformUtil.java">geosmart/coordtransform | Github</a>
-     *
-     * @author lucka-me
-     * @since 0.1.4
-     */
-    private fun fixCoordinate(location: Location): Location {
-        val origLat = location.latitude
-        val origLng = location.longitude
-        // 不在国内不做转换
-        if ((origLng < 72.004 || origLng > 137.8347) || (origLat < 0.8293 || origLat > 55.8271)) {
-            return location
-        }
-        val lat = origLat - 35.0
-        val lng = origLng - 105.0
-        var dLat = (-100.0 + 2.0 * lng + 3.0 * lat + 0.2 * lat * lat + 0.1 * lng * lat
-            + 0.2 * sqrt(abs(lng))
-            + (20.0 * sin(6.0 * lng * PI) + 20.0 * sin(2.0 * lng * PI))
-            * 2.0 / 3.0 + (20.0 * sin(lat * PI) + 40.0 * sin(lat / 3.0 * PI))
-            * 2.0 / 3.0 + (160.0 * sin(lat / 12.0 * PI)
-            + 320 * sin(lat * PI / 30.0)) * 2.0 / 3.0)
-        var dLng = (300.0 + lng + 2.0 * lat + 0.1 * lng * lng + 0.1 * lng * lat + 0.1
-            * sqrt(abs(lng)) + (20.0 * sin(6.0 * lng * PI) + 20.0
-            * sin(2.0 * lng * PI)) * 2.0 / 3.0 + (20.0 * sin(lng * PI) + 40.0
-            * sin(lng / 3.0 * PI)) * 2.0 / 3.0 + (150.0 * sin(lng / 12.0 * PI)
-            + 300.0 * sin(lng / 30.0 * PI)) * 2.0 / 3.0)
-        val radLat = origLat / 180.0 * PI
-        var magic = sin(radLat)
-        magic = 1 - ellipsoidEE * magic * magic
-        val sqrtMagic = sqrt(magic)
-        dLat = (dLat * 180.0) / ((ellipsoidA * (1 - ellipsoidEE)) / (magic * sqrtMagic) * PI)
-        dLng = (dLng * 180.0) / (ellipsoidA / sqrtMagic * cos(radLat) * PI)
-        val fixedLat = origLat + dLat
-        val fixedLng = origLng + dLng
-
-        location.latitude = fixedLat
-        location.longitude = fixedLng
-        return location
-    }
-
     companion object {
         const val ellipsoidA = 6378137.0
         const val ellipsoidEE = 0.00669342162296594323
         const val earthR = 6372796.924
         const val locationProvider = LocationManager.NETWORK_PROVIDER
+
+        /**
+         * 将 WGS-84 坐标系转换为 GCJ-02 坐标系
+         *
+         * ## Changelog
+         * ### 0.1.5
+         * - [Location] 改为非空类型
+         * ### 0.1.6
+         * - 参数 [location] 引用的对象也会被转换
+         * ### 0.1.7
+         * - [Math.PI] -> [PI]
+         * ### 0.1.10
+         * - 修正算法
+         * ### 0.3.1
+         * - 作为静态函数提供
+         *
+         * @param [location] 待转换的位置
+         *
+         * @return 转换后的位置
+         *
+         * @see <a href="https://github.com/geosmart/coordtransform/blob/master/src/main/java/me/demo/util/geo/CoordinateTransformUtil.java">geosmart/coordtransform | Github</a>
+         *
+         * @author lucka-me
+         * @since 0.1.4
+         */
+        fun fixCoordinate(location: Location): Location {
+            val origLat = location.latitude
+            val origLng = location.longitude
+            // 不在国内不做转换
+            if ((origLng < 72.004 || origLng > 137.8347) || (origLat < 0.8293 || origLat > 55.8271)) {
+                return location
+            }
+            val lat = origLat - 35.0
+            val lng = origLng - 105.0
+            var dLat = (-100.0 + 2.0 * lng + 3.0 * lat + 0.2 * lat * lat + 0.1 * lng * lat
+                + 0.2 * sqrt(abs(lng))
+                + (20.0 * sin(6.0 * lng * PI) + 20.0 * sin(2.0 * lng * PI))
+                * 2.0 / 3.0 + (20.0 * sin(lat * PI) + 40.0 * sin(lat / 3.0 * PI))
+                * 2.0 / 3.0 + (160.0 * sin(lat / 12.0 * PI)
+                + 320 * sin(lat * PI / 30.0)) * 2.0 / 3.0)
+            var dLng = (300.0 + lng + 2.0 * lat + 0.1 * lng * lng + 0.1 * lng * lat + 0.1
+                * sqrt(abs(lng)) + (20.0 * sin(6.0 * lng * PI) + 20.0
+                * sin(2.0 * lng * PI)) * 2.0 / 3.0 + (20.0 * sin(lng * PI) + 40.0
+                * sin(lng / 3.0 * PI)) * 2.0 / 3.0 + (150.0 * sin(lng / 12.0 * PI)
+                + 300.0 * sin(lng / 30.0 * PI)) * 2.0 / 3.0)
+            val radLat = origLat / 180.0 * PI
+            var magic = sin(radLat)
+            magic = 1 - ellipsoidEE * magic * magic
+            val sqrtMagic = sqrt(magic)
+            dLat = (dLat * 180.0) / ((ellipsoidA * (1 - ellipsoidEE)) / (magic * sqrtMagic) * PI)
+            dLng = (dLng * 180.0) / (ellipsoidA / sqrtMagic * cos(radLat) * PI)
+            val fixedLat = origLat + dLat
+            val fixedLng = origLng + dLng
+
+            location.latitude = fixedLat
+            location.longitude = fixedLng
+            return location
+        }
     }
 }

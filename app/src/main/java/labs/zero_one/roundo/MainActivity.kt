@@ -11,6 +11,7 @@ import android.support.v4.content.ContextCompat
 import android.support.v4.graphics.drawable.DrawableCompat
 import android.support.v7.app.AppCompatActivity
 import android.support.v7.preference.PreferenceManager
+import android.util.Log
 import android.view.View
 import android.view.ViewGroup
 import kotlinx.android.synthetic.main.activity_main.*
@@ -127,6 +128,9 @@ class MainActivity : AppCompatActivity() {
                         * missionManager.checkPointList.size / missionManager.data.targetTime
                     )
                 )
+                // Update location
+                if (locationKit.isLocationAvailable)
+                    missionManager.reach(locationKit.lastLocation)
 
             }
 
@@ -490,26 +494,15 @@ class MainActivity : AppCompatActivity() {
 
         // Mission Time
         val realPastTime = ((Date().time - missionManager.data.startTime.time) / 1000).toInt()
-        val cal = Calendar.getInstance()
-        cal.time = missionManager.data.startTime
         dashboardLayout.timeProgressText.text = String.format(
             getString(R.string.dashboard_time_progress_text),
             timeToString(missionManager.data.pastTime, showSecond),
             timeToString(missionManager.data.targetTime, showSecond)
         )
         dashboardLayout.timeStartText.text = if (showSecond) {
-            String.format(
-                getString(R.string.format_time_sec),
-                cal.get(Calendar.HOUR_OF_DAY),
-                cal.get(Calendar.MINUTE),
-                cal.get(Calendar.SECOND)
-            )
+            String.format("%tT", missionManager.data.startTime)
         } else {
-            String.format(
-                getString(R.string.format_time),
-                cal.get(Calendar.HOUR_OF_DAY),
-                cal.get(Calendar.MINUTE)
-            )
+            String.format("%tR", missionManager.data.startTime)
         }
         dashboardLayout.timeRealPastText.text = timeToString(realPastTime, showSecond)
         dashboardLayout.timeProgressBar.incrementProgressBy(missionManager.data.pastTime

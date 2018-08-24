@@ -144,9 +144,11 @@
         android:id="@+id/dividerTimeCol"
         android:layout_width="1dp"
         android:layout_height="0dp"
+        android:layout_marginEnd="8dp"
         android:layout_marginStart="8dp"
         android:background="?android:attr/listDivider"
         app:layout_constraintBottom_toBottomOf="@+id/timeCol1"
+        app:layout_constraintEnd_toStartOf="@+id/timeCol2"
         app:layout_constraintStart_toEndOf="@+id/timeCol1"
         app:layout_constraintTop_toTopOf="@+id/timeCol1" />
 
@@ -155,11 +157,8 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginEnd="24dp"
-        android:layout_marginStart="8dp"
         android:layout_marginTop="8dp"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.0"
-        app:layout_constraintStart_toEndOf="@+id/dividerTimeCol"
         app:layout_constraintTop_toBottomOf="@+id/timeProgressBar">
 
         <TextView
