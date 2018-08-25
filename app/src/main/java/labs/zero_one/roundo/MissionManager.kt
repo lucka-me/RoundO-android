@@ -36,7 +36,7 @@ import kotlin.math.*
  * - [resume]
  * - [setupTimer]
  * - [stopTimer]
- * - [onActivityResume]
+ * - [processCORC]
  *
  * @param [context] 环境
  * @param [missionListener] 任务消息监听器
@@ -353,6 +353,7 @@ class MissionManager(private var context: Context, private val missionListener: 
             objectInputStream.close()
             tempFileInputStream.close()
             if (data.started) {
+                Log.i("TEST RO", "任务已恢复")
                 state = MissionState.Started
                 missionListener.onStarted(true)
                 setupTimer()
@@ -367,19 +368,6 @@ class MissionManager(private var context: Context, private val missionListener: 
     }
 
     /**
-     * 当 Activity 执行 onResume() 且任务处在暂停状态时恢复计时器
-     *
-     * @author lucka-me
-     * @since 0.2
-     */
-    fun onActivityResume() {
-        if (state == MissionState.Paused) {
-            state = MissionState.Started
-            setupTimer()
-        }
-    }
-
-    /**
      * 抵达地点并签到
      *
      * @param [location] 抵达的位置
@@ -390,7 +378,6 @@ class MissionManager(private var context: Context, private val missionListener: 
     fun reach(location: Location) {
         if (state != MissionState.Started) return
         data.distance += processCORC(location, trackPointList)
-        Log.i("TEST","轨迹点数量：" + trackPointList.size)
         doAsync {
             val newCheckedIndexList: ArrayList<Int> = ArrayList(0)
             var totalCheckedCount = 0
@@ -451,7 +438,7 @@ class MissionManager(private var context: Context, private val missionListener: 
         val centerLatRad = Math.toRadians(center.latitude)
         val centerLngRad = Math.toRadians(center.longitude)
         // Convert radius to radians
-        val radRadius = radius / LocationKit.earthR
+        val radRadius = radius / LocationKit.EARTH_R
         for (i: Int in 0 until count) {
             // Generate random distance and bearing both in radian
             val distanceRad = acos(random.nextDouble() * (cos(radRadius) - 1) + 1)
@@ -524,7 +511,7 @@ class MissionManager(private var context: Context, private val missionListener: 
          *
          * @see <a href="http://kns.cnki.net/kns/detail/detail.aspx?QueryID=7&CurRec=1&recid=&FileName=DQXX201402005&DbName=CJFD2014&DbCode=CJFQ&yx=&pr=&URLID=">论文 | 中国知网</a>
          */
-        private fun processCORC(newLocation: Location, trackPointList: ArrayList<TrackPoint>): Double {
+        fun processCORC(newLocation: Location, trackPointList: ArrayList<TrackPoint>): Double {
             // Add to list first
             trackPointList.add(TrackPoint(newLocation))
             // Keep the first
@@ -534,7 +521,7 @@ class MissionManager(private var context: Context, private val missionListener: 
             val distanceLast = trackPointList[size - 1].location
                 .distanceTo(trackPointList[size - 2].location).toDouble()
             if (distanceLast < 10.0) {
-                Log.i("TEST", "距离过短：" + (size - 2) + " -> " + (size - 1) + ": " + distanceLast)
+                Log.i("TEST RO", "距离过短：" + (size - 2) + " -> " + (size - 1) + ": " + distanceLast)
                 trackPointList.removeAt(size - 1)
                 return 0.0
             }
@@ -575,7 +562,7 @@ class MissionManager(private var context: Context, private val missionListener: 
             // CORC 累计偏移限差阈值
             val thresholdT = 20
             if (d >= thresholdT) {
-                Log.i("TEST", "CORC 保留第 " + (size - 2) + " 个点，距离：" + distanceB)
+                Log.i("TEST RO", "CORC 保留第 " + (size - 2) + " 个点，距离：" + distanceB)
                 return distanceB
             }
             // 倒数第二个为冗余点

@@ -43,6 +43,11 @@
             android:screenOrientation="portrait"
             android:parentActivityName="labs.zero_one.roundo.PreferenceMainActivity"/>
 
+        <service
+            android:name=".BackgroundMissionService"
+            android:description="@string/service_description"
+            android:exported="false" />
+
     </application>
 
 </manifest>

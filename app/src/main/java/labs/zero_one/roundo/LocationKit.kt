@@ -1,15 +1,12 @@
 package labs.zero_one.roundo
 
 import android.Manifest
-import android.app.AlertDialog
 import android.content.Context
-import android.content.Intent
 import android.content.pm.PackageManager
 import android.location.Location
 import android.location.LocationListener
 import android.location.LocationManager
 import android.os.Bundle
-import android.provider.Settings
 import android.support.v4.app.ActivityCompat
 import com.minemap.minemapsdk.geometry.LatLng
 import kotlin.math.*
@@ -22,16 +19,15 @@ import kotlin.math.*
  * - [isLocationAvailable]
  * - [locationManager]
  * - [locationListener]
- * - [ellipsoidA]
- * - [ellipsoidEE]
- * - [locationProvider]
+ * - [ELLIPSOID_A]
+ * - [ELLIPSOID_EE]
+ * - [DEFAULT_PROVIDER]
  *
  * ## 子类列表
  * - [locationKitListener]
  *
  * ## 方法列表
  * - [requestPermission]
- * - [showPermissionRequestDialog]
  * - [startUpdate]
  * - [stopUpdate]
  * - [fixCoordinate]
@@ -46,18 +42,18 @@ import kotlin.math.*
  * @property [isLocationAvailable] 位置是否可用
  * @property [locationManager] 原生定位管理器
  * @property [locationListener] 原生定位消息监听器
- * @property [ellipsoidA] 椭球参数：长半轴（米）
- * @property [ellipsoidEE] 椭球参数：扁率
- * @property [earthR] 地球平均半径（米）
- * @property [locationProvider] 定位 Provider
- * @property [fixLocationProvider] 修正坐标后位置的 Provider
+ * @property [ELLIPSOID_A] 椭球参数：长半轴（米）
+ * @property [ELLIPSOID_EE] 椭球参数：扁率
+ * @property [EARTH_R] 地球平均半径（米）
+ * @property [DEFAULT_PROVIDER] 定位 Provider
+ * @property [FIXED_PROVIDER] 修正坐标后位置的 Provider
  */
 class LocationKit(
     private var context: Context,
     private val locationKitListener: LocationKitListener
 ) {
 
-    var lastLocation: Location = Location("")
+    var lastLocation: Location = Location(FIXED_PROVIDER)
     var isLocationAvailable: Boolean = false
     private val locationManager =
         context.getSystemService(Context.LOCATION_SERVICE) as LocationManager
@@ -82,14 +78,14 @@ class LocationKit(
         }
 
         override fun onProviderDisabled(provider: String?) {
-            if (provider == locationProvider) {
+            if (provider == DEFAULT_PROVIDER) {
                 isLocationAvailable = false
                 locationKitListener.onProviderDisabled()
             }
         }
 
         override fun onProviderEnabled(provider: String?) {
-            if (provider == locationProvider) {
+            if (provider == DEFAULT_PROVIDER) {
                 isLocationAvailable = true
                 locationKitListener.onProviderEnabled()
             }
@@ -163,7 +159,7 @@ class LocationKit(
         if (ActivityCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION) ==
             PackageManager.PERMISSION_GRANTED
         ) {
-            val location = locationManager.getLastKnownLocation(locationProvider)
+            val location = locationManager.getLastKnownLocation(DEFAULT_PROVIDER)
             if (location == null) {
                 lastLocation.longitude = 108.947031
                 lastLocation.latitude = 34.259441
@@ -173,7 +169,7 @@ class LocationKit(
                 isLocationAvailable = true
                 locationListener.onLocationChanged(lastLocation)
             }
-            if (!locationManager.isProviderEnabled(locationProvider)) {
+            if (!locationManager.isProviderEnabled(DEFAULT_PROVIDER)) {
                 locationKitListener.onProviderDisabled()
             }
         } else {
@@ -186,12 +182,18 @@ class LocationKit(
     /**
      * 请求权限
      *
+     * ## Changelog
+     * ### 0.3.3
+     * - 返回是否需要显示请求权限对话框，由上层显示或做其他处理
+     *
      * @param [activity] 应用的 Activity
+     *
+     * @return 是否需要显示请求权限对话框
      *
      * @author lucka-me
      * @since 0.1.5
      */
-    fun requestPermission(activity: MainActivity) {
+    fun requestPermission(activity: MainActivity): Boolean {
         if (ActivityCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION) !=
             PackageManager.PERMISSION_GRANTED
         ) {
@@ -201,7 +203,7 @@ class LocationKit(
                     Manifest.permission.ACCESS_FINE_LOCATION
                 )
             ) {
-                showPermissionRequestDialog()
+                return true
             } else {
                 ActivityCompat.requestPermissions(
                     activity,
@@ -210,24 +212,7 @@ class LocationKit(
                 )
             }
         }
-    }
-
-    /**
-     * 显示请求权限对话框
-     *
-     * @author lucka-me
-     * @since 0.1.5
-     */
-    fun showPermissionRequestDialog() {
-        val alert = AlertDialog.Builder(context)
-        alert.setTitle(context.getString(R.string.permission_request_title))
-        alert.setMessage(context.getString(R.string.permission_explain_location))
-        alert.setCancelable(false)
-        alert.setNegativeButton(context.getString(R.string.permission_system_settings)) { _, _ ->
-            context.startActivity(Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS))
-        }
-        alert.setPositiveButton(context.getString(R.string.confirm), null)
-        alert.show()
+        return false
     }
 
     /**
@@ -244,13 +229,15 @@ class LocationKit(
             PackageManager.PERMISSION_GRANTED
         ) {
             locationManager.requestLocationUpdates(
-                locationProvider,
-                1000.toLong(),
-                1.0.toFloat(),
+                DEFAULT_PROVIDER,
+                UPDATE_INTERVAL,
+                UPDATE_DISTANCE,
                 locationListener
             )
             true
         } else {
+            val error = Exception(context.getString(R.string.err_location_permission_denied))
+            locationKitListener.onException(error)
             false
         }
     }
@@ -266,11 +253,13 @@ class LocationKit(
     }
 
     companion object {
-        const val ellipsoidA = 6378137.0
-        const val ellipsoidEE = 0.00669342162296594323
-        const val earthR = 6372796.924
-        const val locationProvider = LocationManager.NETWORK_PROVIDER
-        const val fixLocationProvider = "fixed"
+        const val ELLIPSOID_A = 6378137.0
+        const val ELLIPSOID_EE = 0.00669342162296594323
+        const val EARTH_R = 6372796.924
+        const val UPDATE_INTERVAL: Long = 1000
+        const val UPDATE_DISTANCE: Float = 1.0f
+        const val DEFAULT_PROVIDER = LocationManager.NETWORK_PROVIDER
+        const val FIXED_PROVIDER = "fixed"
 
         /**
          * 将 WGS-84 坐标系转换为 GCJ-02 坐标系
@@ -301,7 +290,7 @@ class LocationKit(
          */
         fun fixCoordinate(location: Location): Location {
             // 避免二次修正
-            if (location.provider == fixLocationProvider) return Location(location)
+            if (location.provider == FIXED_PROVIDER) return Location(location)
             val origLat = location.latitude
             val origLng = location.longitude
             // 不在国内不做转换
@@ -309,7 +298,7 @@ class LocationKit(
                 (origLat < 0.8293 || origLat > 55.8271)
             ) {
                 val newLocation = Location(location)
-                newLocation.provider = fixLocationProvider
+                newLocation.provider = FIXED_PROVIDER
                 return newLocation
             }
             val lat = origLat - 35.0
@@ -327,14 +316,14 @@ class LocationKit(
                 + 300.0 * sin(lng / 30.0 * PI)) * 2.0 / 3.0)
             val radLat = origLat / 180.0 * PI
             var magic = sin(radLat)
-            magic = 1 - ellipsoidEE * magic * magic
+            magic = 1 - ELLIPSOID_EE * magic * magic
             val sqrtMagic = sqrt(magic)
-            dLat = (dLat * 180.0) / ((ellipsoidA * (1 - ellipsoidEE)) / (magic * sqrtMagic) * PI)
-            dLng = (dLng * 180.0) / (ellipsoidA / sqrtMagic * cos(radLat) * PI)
+            dLat = (dLat * 180.0) / ((ELLIPSOID_A * (1 - ELLIPSOID_EE)) / (magic * sqrtMagic) * PI)
+            dLng = (dLng * 180.0) / (ELLIPSOID_A / sqrtMagic * cos(radLat) * PI)
             val fixedLat = origLat + dLat
             val fixedLng = origLng + dLng
             val newLocation = Location(location)
-            newLocation.provider = fixLocationProvider
+            newLocation.provider = FIXED_PROVIDER
             newLocation.latitude = fixedLat
             newLocation.longitude = fixedLng
             return newLocation

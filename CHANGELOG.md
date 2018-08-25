@@ -1,6 +1,14 @@
 <h1 align=center>更新日志</h1>
 
 ```markdown
+## [0.3.3] - 2018-08-25
+- 0.3.2(662) -> 0.3.3(714)
+
+### Finished
+- Background Mission Service (Not fully functional)
+```
+
+```markdown
 ## [0.3.2] - 2018-08-24
 - 0.3.1(640) -> 0.3.2(662)
 

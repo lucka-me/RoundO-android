@@ -11,6 +11,7 @@ import android.support.v4.content.ContextCompat
 import android.support.v4.graphics.drawable.DrawableCompat
 import android.support.v7.app.AppCompatActivity
 import android.support.v7.preference.PreferenceManager
+import android.util.Log
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
@@ -223,6 +224,8 @@ class MainActivity : AppCompatActivity() {
 
     private lateinit var dashboardLayout: View
 
+    //private lateinit var backgroundMissionService: Intent
+
     /**
      * 请求代码
      *
@@ -254,12 +257,26 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
+        // Stop the background service
+        //backgroundMissionService = Intent(this, BackgroundMissionService::class.java)
+
         // Initialize Dashboard
         initDashboard()
 
         // Handle the permissions
         locationKit = LocationKit(this, locationKitListener)
-        locationKit.requestPermission(this)
+        if (locationKit.requestPermission(this)) {
+            DialogKit.showDialog(
+                this,
+                R.string.permission_request_title,
+                R.string.permission_explain_location,
+                positiveButtonTextId = R.string.confirm,
+                negativeButtonTextId = R.string.permission_system_settings,
+                negativeButtonListener = { _, _ ->
+                    startActivity(Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS))
+                },
+                cancelable = false)
+        }
 
         // Setup Map
         mapKit.initMap(mapView, locationKit, savedInstanceState)
@@ -291,7 +308,7 @@ class MainActivity : AppCompatActivity() {
         buttonDashboard.setOnClickListener {
             when(missionManager.state) {
                 MissionManager.MissionState.Started, MissionManager.MissionState.Stopped -> {
-                    openDashboard()
+                    if (!isDashboardShown()) openDashboard()
                 }
                 else -> {
 
@@ -316,7 +333,8 @@ class MainActivity : AppCompatActivity() {
         progressBar.visibility = View.INVISIBLE
 
         // Resume mission
-        // Should resume mission here instead of in onPause()
+        // Should resume mission here instead of in onResume()
+        // In onResume(), it should resume mission only when the mission is paused
         missionManager.resume()
 
     }
@@ -324,15 +342,41 @@ class MainActivity : AppCompatActivity() {
     override fun onPause() {
         locationKit.stopUpdate()
         missionManager.pause()
+        if (missionManager.state == MissionManager.MissionState.Paused) {
+            // Start the background service
+
+            val backgroundMissionService =
+                Intent(this, BackgroundMissionService::class.java)
+            startService(backgroundMissionService)
+        }
 
         super.onPause()
     }
 
     override fun onResume() {
-        missionManager.onActivityResume()
-        locationKit.startUpdate()
+        if (missionManager.state == MissionManager.MissionState.Paused) {
+            // Stop the background service
 
+            val backgroundMissionService =
+                Intent(this, BackgroundMissionService::class.java)
+            stopService(backgroundMissionService)
+
+            missionManager.resume()
+        }
+        locationKit.startUpdate()
         super.onResume()
+    }
+
+    override fun onDestroy() {
+
+        // Stop the background service
+        Log.i("TEST RO MAIN", "要销毁了 DESTROY")
+
+        val backgroundMissionService =
+            Intent(this, BackgroundMissionService::class.java)
+        stopService(backgroundMissionService)
+
+        super.onDestroy()
     }
 
     // Handle the activity result
