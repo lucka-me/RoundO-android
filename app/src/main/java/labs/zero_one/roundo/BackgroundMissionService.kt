@@ -1,9 +1,12 @@
 package labs.zero_one.roundo
 
+import android.app.Notification
+import android.app.PendingIntent
 import android.app.Service
 import android.content.Intent
 import android.location.Location
 import android.os.IBinder
+import android.support.v4.app.NotificationCompat
 import android.util.Log
 import android.widget.Toast
 import org.jetbrains.anko.runOnUiThread
@@ -11,11 +14,14 @@ import java.io.*
 import java.util.*
 
 /**
- * 后台服务，目前仅能在以下情况中运行：
- * - Activity 在前台时锁屏
- * - Activity 在后台且未锁屏
+ * 后台服务，目前能在以下情况中运行：
+ * - App 未被停止/清除
  *
  * 每隔5秒或成功签到时保存一次任务数据。
+ *
+ * ## Changelog
+ * ### 0.3.4
+ * - 作为前台服务运行
  *
  * ## 属性列表
  * - [missionData]
@@ -45,7 +51,7 @@ import java.util.*
  * @property [locationKit] 位置工具
  * @property [timer] 计时器，用于定时保存数据
  */
-class BackgroundMissionService() : Service() {
+class BackgroundMissionService : Service() {
 
     private var missionData: MissionManager.MissionData = MissionManager.MissionData()
     private var startTime = Date()
@@ -100,11 +106,22 @@ class BackgroundMissionService() : Service() {
                 // Notify user
             }
         }
-    private lateinit var locationKit: LocationKit
+    private var locationKit: LocationKit? = null
 
     private var timer: Timer = Timer(true)
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+
+        // Start foreground
+        // ContentTitle, ContentText and SmallIcon is required
+        // REFERENCE: https://www.jianshu.com/p/5792cf3090bc
+        val notification = NotificationCompat.Builder(this.applicationContext, CHANNEL_ID)
+            .setContentTitle(getString(R.string.app_name))
+            .setContentText(getString(R.string.service_notification_text))
+            .setContentIntent(PendingIntent.getActivity(this, 0, Intent(this, MainActivity::class.java), 0))
+            .setSmallIcon(R.drawable.ic_dash)
+            .build()
+        startForeground(FOREGROUND_ID, notification)
 
         // Get the temp file
         try {
@@ -134,20 +151,21 @@ class BackgroundMissionService() : Service() {
             }
         }, 0, 5000)
         locationKit = LocationKit(this, locationKitListener)
-        locationKit.startUpdate()
-        Log.i("TEST RO BKM", "后台监听开始，START COMMAND")
+        locationKit?.startUpdate()
 
-        return super.onStartCommand(intent, flags, startId)
+        super.onStartCommand(intent, flags, startId)
+        return START_STICKY
     }
+
 
     override fun onDestroy() {
 
         timer.cancel()
         timer.purge()
         timer = Timer(true)
-        locationKit.stopUpdate()
+        locationKit?.stopUpdate()
+        stopForeground(true)
 
-        Log.i("TEST RO BKM", "后台监听结束，DESTROY")
         super.onDestroy()
 
     }
@@ -185,5 +203,10 @@ class BackgroundMissionService() : Service() {
             Toast.makeText(this, error.message, Toast.LENGTH_LONG).show()
         }
 
+    }
+
+    companion object {
+        private const val CHANNEL_ID = "RoundO Notification"
+        private const val FOREGROUND_ID = 1
     }
 }

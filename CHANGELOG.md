@@ -2,6 +2,17 @@
 
 ```markdown
 ## [0.3.3] - 2018-08-25
+- 0.3.3(714) -> 0.3.4(755)
+
+### Finished
+- Background Mission Service in Foreground
+
+### Fixed
+- Dashboard doesn't show in some conditions
+```
+
+```markdown
+## [0.3.3] - 2018-08-25
 - 0.3.2(662) -> 0.3.3(714)
 
 ### Finished

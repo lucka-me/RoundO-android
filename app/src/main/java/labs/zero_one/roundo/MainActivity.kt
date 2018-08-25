@@ -356,7 +356,6 @@ class MainActivity : AppCompatActivity() {
     override fun onResume() {
         if (missionManager.state == MissionManager.MissionState.Paused) {
             // Stop the background service
-
             val backgroundMissionService =
                 Intent(this, BackgroundMissionService::class.java)
             stopService(backgroundMissionService)
@@ -438,10 +437,7 @@ class MainActivity : AppCompatActivity() {
         val dialogBuilder = AlertDialog.Builder(this)
             .setTitle(if (isDash) R.string.dashboard_title_ee else R.string.dashboard_title)
             .setIcon(if (isDash) R.drawable.ic_dash else R.drawable.ic_dashboard)
-            .setPositiveButton(R.string.confirm) { dialog, _ ->
-                dialog.dismiss()
-                quitDashboardParent()
-            }
+            .setPositiveButton(R.string.confirm, null)
         val dashboard = if (missionManager.state == MissionManager.MissionState.Started) {
 
             initDashboard()
@@ -452,8 +448,6 @@ class MainActivity : AppCompatActivity() {
             dialogBuilder
                 .setView(dashboardLayout)
                 .setNegativeButton(R.string.dashboard_stop) { dialog, _ ->
-                    dialog.dismiss()
-                    quitDashboardParent()
                     DialogKit.showDialog(
                         this,
                         R.string.alert_title, R.string.mission_stop_confirm_message,
@@ -464,6 +458,9 @@ class MainActivity : AppCompatActivity() {
                         negativeButtonTextId = R.string.cancel,
                         cancelable = false
                     )
+                }
+                .setOnDismissListener {
+                    quitDashboardParent()
                 }
                 .show()
 
