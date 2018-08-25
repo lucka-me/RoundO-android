@@ -63,7 +63,7 @@
         </Preference>
 
         <Preference
-            android:icon="@drawable/ic_pref_about_dependency"
+            android:icon="@drawable/ic_pref_about_ui"
             android:title="@string/pref_about_dependency_prefFix_title"
             android:summary="@string/pref_about_dependency_prefFix_summary">
             <intent
@@ -72,7 +72,7 @@
         </Preference>
 
         <Preference
-            android:icon="@drawable/ic_pref_about_dependency"
+            android:icon="@drawable/ic_pref_about_ui"
             android:title="@string/pref_about_dependency_mpb_title"
             android:summary="@string/pref_about_dependency_mpb_summary">
             <intent

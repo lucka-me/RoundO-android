@@ -118,7 +118,12 @@ class BackgroundMissionService : Service() {
         val notification = NotificationCompat.Builder(this.applicationContext, CHANNEL_ID)
             .setContentTitle(getString(R.string.app_name))
             .setContentText(getString(R.string.service_notification_text))
-            .setContentIntent(PendingIntent.getActivity(this, 0, Intent(this, MainActivity::class.java), 0))
+            .setContentIntent(PendingIntent.getActivity(
+                this,
+                0,
+                Intent(this, MainActivity::class.java),
+                0
+            ))
             .setSmallIcon(R.drawable.ic_dash)
             .build()
         startForeground(FOREGROUND_ID, notification)

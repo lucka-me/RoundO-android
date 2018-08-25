@@ -11,7 +11,6 @@ import android.support.v4.content.ContextCompat
 import android.support.v4.graphics.drawable.DrawableCompat
 import android.support.v7.app.AppCompatActivity
 import android.support.v7.preference.PreferenceManager
-import android.util.Log
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
@@ -38,6 +37,7 @@ import java.util.*
  * - [onCreate]
  * - [onPause]
  * - [onResume]
+ * - [onBackPressed]
  * - [onActivityResult]
  * - [onRequestPermissionsResult]
  *
@@ -318,8 +318,7 @@ class MainActivity : AppCompatActivity() {
         buttonPreference.setOnClickListener {
             when(missionManager.state) {
                 MissionManager.MissionState.Started, MissionManager.MissionState.Stopped -> {
-                    val intent: Intent = Intent(this, PreferenceMainActivity::class.java)
-                        .apply {  }
+                    val intent = Intent(this, PreferenceMainActivity::class.java)
                     startActivity(intent)
                 }
                 else -> {
@@ -366,16 +365,20 @@ class MainActivity : AppCompatActivity() {
         super.onResume()
     }
 
-    override fun onDestroy() {
-
-        // Stop the background service
-        Log.i("TEST RO MAIN", "要销毁了 DESTROY")
-
-        val backgroundMissionService =
-            Intent(this, BackgroundMissionService::class.java)
-        stopService(backgroundMissionService)
-
-        super.onDestroy()
+    override fun onBackPressed() {
+        // Alert user when mission is not stop because this will stop the app
+        if (missionManager.state != MissionManager.MissionState.Stopped) {
+            DialogKit.showDialog(
+                this,
+                R.string.alert_title,
+                R.string.alert_exit_when_mission_not_stopped,
+                positiveButtonListener = { dialog, _ ->
+                    dialog.dismiss()
+                    super.onBackPressed()
+                },
+                negativeButtonTextId = R.string.cancel
+                )
+        }
     }
 
     // Handle the activity result
@@ -471,8 +474,7 @@ class MainActivity : AppCompatActivity() {
                 .setNegativeButton(R.string.dashboard_start) { dialog, _ ->
                     dialog.dismiss()
                     quitDashboardParent()
-                    val intent: Intent = Intent(this, SetupActivity::class.java)
-                        .apply {  }
+                    val intent = Intent(this, SetupActivity::class.java)
                     startActivityForResult(intent, AppRequest.ActivitySetup.code)
                     overridePendingTransition(R.anim.slide_bottom_up, R.anim.slide_bottom_down)
                 }

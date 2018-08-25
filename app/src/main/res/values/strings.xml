@@ -13,6 +13,7 @@
     <string name="alert_title">警告</string>
     <string name="confirm">确认</string>
     <string name="cancel">取消</string>
+    <string name="alert_exit_when_mission_not_stopped">任务未结束，确认退出吗？\n您可以将本应用置入后台。</string>
     <!-- Mission -->
     <string name="mission_resumed">任务已恢复</string>
     <string name="mission_checked_title">签到</string>

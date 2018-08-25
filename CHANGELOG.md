@@ -1,7 +1,19 @@
 <h1 align=center>更新日志</h1>
 
 ```markdown
-## [0.3.3] - 2018-08-25
+## [0.3.5] - 2018-08-25
+- 0.3.4(755) -> 0.3.5(776)
+
+### Finished
+- Background description in Preference
+- Warn user when try to exit during mission (Press back)
+
+### Changed
+- UI improved
+```
+
+```markdown
+## [0.3.4] - 2018-08-25
 - 0.3.3(714) -> 0.3.4(755)
 
 ### Finished

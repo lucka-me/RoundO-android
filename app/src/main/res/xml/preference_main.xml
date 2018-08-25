@@ -19,6 +19,12 @@
         android:title="@string/pref_other_category_title">
 
         <Preference
+            android:key="@string/pref_other_background_key"
+            android:title="@string/pref_other_background_title"
+            android:icon="@drawable/ic_pref_other_background"
+            android:summary="@string/pref_other_background_summary" />
+
+        <Preference
             android:key="@string/pref_other_about_key"
             android:title="@string/pref_other_about_title"
             android:icon="@drawable/ic_pref_other_about">

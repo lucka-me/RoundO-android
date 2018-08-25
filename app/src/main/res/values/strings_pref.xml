@@ -9,6 +9,14 @@
     <string name="pref_display_show_second_summary">在仪表盘中显示秒数</string>
 
     <string name="pref_other_category_title">其它</string>
+    <string name="pref_other_background_key">后台限制</string>
+    <string name="pref_other_background_title">后台限制</string>
+    <string name="pref_other_background_summary">对 Android 中后台服务限制的说明</string>
+    <string name="pref_other_background_detail">
+        Android 针对后台应用有较为严格的管理策略：当用户离开应用主界面后，系统可在某些情况下结束应用而不通知用户。\n本应用针对这一情况优化了后台功能，以在任务期间尽量保持运行和数据更新。\n当本应用进入后台时，您可以在通知中心看到本应用正在后台运行的通知，若本应用被结束，此通知将会消失。\n部分第三方 ROM 拥有更严格的管理策略，需要用户进行相关设置（如加入白名单）以避免被系统结束。
+    </string>
+    <string name="pref_other_background_settings">相关设置</string>
+    <string name="pref_other_background_settings_flyme">Flyme 用户请打开多任务界面并锁定本应用。</string>
     <string name="pref_other_about_key">pref_about</string>
     <string name="pref_other_about_title">关于</string>
 
