@@ -101,14 +101,16 @@ class MainActivity : AppCompatActivity() {
         object : MissionManager.MissionListener {
 
             override fun onStarted(isResumed: Boolean) {
-                for (waypoint in missionManager.checkPointList) {
+                for (i in 0 until missionManager.checkPointList.size) {
                     mapKit.addMarkerAt(
-                        waypoint.location,
-                        if (waypoint.isChecked) {
+                        missionManager.checkPointList[i].location,
+                        type =
+                        if (missionManager.checkPointList[i].isChecked) {
                             MapKit.MarkerType.Checked
                         } else {
                             MapKit.MarkerType.Unchecked
-                        }
+                        },
+                        title = if (missionManager.data.sequential) (i + 1).toString() else null
                     )
                 }
                 if (missionManager.data.sequential &&
@@ -450,7 +452,7 @@ class MainActivity : AppCompatActivity() {
 
             dialogBuilder
                 .setView(dashboardLayout)
-                .setNegativeButton(R.string.dashboard_stop) { dialog, _ ->
+                .setNegativeButton(R.string.dashboard_stop) { _, _ ->
                     DialogKit.showDialog(
                         this,
                         R.string.alert_title, R.string.mission_stop_confirm_message,

@@ -257,28 +257,25 @@ class MapKit(private val context: Context) {
     }
 
     /**
-     * 在指定位置添加默认标记
-     *
-     * @param [location] 目标位置
-     *
-     * @author lucka-me
-     * @since 0.1.7
-     */
-    fun addMarkerAt(location: Location) {
-        add(MarkerOptions().position(LatLng(location)))
-    }
-
-    /**
      * 在指定位置添加指定标记
      *
+     * ## Changelog
+     * ### 0.3.6
+     * - 合并方法，用默认参数的形式提供多种选项
+     * - 添加 [title]
+     *
      * @param [location] 目标位置
-     * @param [type] 标记类型
+     * @param [type] 标记类型，默认为 MineMap 自带类型
+     * @param [title] 标题，默认为无
      *
      * @author lucka-me
      * @since 0.1.10
      */
-    fun addMarkerAt(location: Location, type: MarkerType) {
-        add(MarkerOptions().position(LatLng(location)).icon(markerIconList[type.iconIndex]))
+    fun addMarkerAt(location: Location, type: MarkerType? = null, title: String? = null) {
+        val markerOptions = MarkerOptions().position(LatLng(location))
+        if (type != null) markerOptions.icon(markerIconList[type.iconIndex])
+        if (title != null) markerOptions.title(title)
+        add(markerOptions)
     }
 
     /**

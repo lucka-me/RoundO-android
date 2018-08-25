@@ -24,4 +24,11 @@
     <string name="setup_basic_sequential_summary_true">任务点必须按指定顺序签到</string>
     <string name="setup_basic_sequential_summary_false">任务点可以按任意顺序签到</string>
 
+    <string name="setup_advanced_category_title">高级</string>
+    <string name="setup_advanced_seed_key">setup_advance_seed</string>
+    <string name="setup_advanced_seed_title">随机种子</string>
+    <string name="setup_advanced_seed_summary_default">默认</string>
+    <string name="setup_advanced_seed_summary_set">自定义</string>
+    <string name="setup_advanced_seed_message">输入一串数字作为生成签到点的种子。\n0为使用时间作为种子</string>
+
 </resources>

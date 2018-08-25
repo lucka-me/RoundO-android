@@ -36,4 +36,16 @@
 
     </PreferenceCategory>
 
+    <PreferenceCategory android:title="@string/setup_advanced_category_title">
+
+        <EditTextPreference
+            android:key="@string/setup_advanced_seed_key"
+            android:title="@string/setup_advanced_seed_title"
+            android:summary="@string/setup_advanced_seed_summary_default"
+            android:dialogMessage="@string/setup_advanced_seed_message"
+            android:defaultValue="0"
+            android:inputType="number" />
+
+    </PreferenceCategory>
+
 </android.support.v7.preference.PreferenceScreen>

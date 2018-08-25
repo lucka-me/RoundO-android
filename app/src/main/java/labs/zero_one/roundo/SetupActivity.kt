@@ -60,7 +60,14 @@ class SetupActivity : AppCompatActivity() {
                     getString(R.string.setup_basic_sequential_summary_true)
                 else
                     getString(R.string.setup_basic_sequential_summary_false)
-
+            // Advanced - Seed
+            findPreference(getString(R.string.setup_advanced_seed_key)).summary =
+                if (defaultSharedPreferences
+                        .getString(getString(R.string.setup_advanced_seed_key), "0").toLong() == 0L
+                )
+                    getString(R.string.setup_advanced_seed_summary_default)
+                else
+                    getString(R.string.setup_advanced_seed_summary_set)
             defaultSharedPreferences.registerOnSharedPreferenceChangeListener(this)
         }
 
@@ -102,6 +109,17 @@ class SetupActivity : AppCompatActivity() {
                             getString(R.string.setup_basic_sequential_summary_true)
                         else
                             getString(R.string.setup_basic_sequential_summary_false)
+                }
+
+                getString(R.string.setup_advanced_seed_key) -> {
+                    findPreference(getString(R.string.setup_advanced_seed_key)).summary =
+                        if (defaultSharedPreferences
+                                .getString(getString(R.string.setup_advanced_seed_key), "0")
+                                .toLong() == 0L
+                        )
+                            getString(R.string.setup_advanced_seed_summary_default)
+                        else
+                            getString(R.string.setup_advanced_seed_summary_set)
                 }
             }
         }

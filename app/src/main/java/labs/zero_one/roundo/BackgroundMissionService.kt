@@ -1,8 +1,9 @@
 package labs.zero_one.roundo
 
-import android.app.Notification
+import android.app.NotificationManager
 import android.app.PendingIntent
 import android.app.Service
+import android.content.Context
 import android.content.Intent
 import android.location.Location
 import android.os.IBinder
@@ -57,6 +58,7 @@ class BackgroundMissionService : Service() {
     private var startTime = Date()
     private var checkPointList: ArrayList<CheckPoint> = ArrayList(0)
     private var trackPointList: ArrayList<TrackPoint> = ArrayList(0)
+
     private val locationKitListener: LocationKit.LocationKitListener =
         object : LocationKit.LocationKitListener {
             override fun onLocationUpdated(location: Location) {
@@ -89,8 +91,27 @@ class BackgroundMissionService : Service() {
                 }
                 if (newCheckedIndexList.size > 0) {
                     saveMission()
+                    notificationManager?.notify(
+                        notificationId,
+                        NotificationCompat
+                            .Builder(this@BackgroundMissionService, CHANNEL_ID)
+                            .setContentTitle(getString(R.string.mission_checked_title))
+                            .setContentText(String.format(
+                                getString(R.string.mission_checked_message),
+                                newCheckedIndexList.size, missionData.checked,
+                                checkPointList.size - missionData.checked
+                            ))
+                            .setContentIntent(PendingIntent.getActivity(
+                                this@BackgroundMissionService,
+                                0,
+                                Intent(this@BackgroundMissionService, MainActivity::class.java),
+                                0
+                            ))
+                            .setSmallIcon(R.drawable.ic_check)
+                            .build()
+                    )
+                    notificationId++
                 }
-                // Notify checked
                 if (totalCheckedCount == checkPointList.size) {
                     // Notify all checked
                 }
@@ -110,12 +131,16 @@ class BackgroundMissionService : Service() {
 
     private var timer: Timer = Timer(true)
 
+    private var notificationManager: NotificationManager? = null
+    private var notificationId: Int = 2
+
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
 
         // Start foreground
         // ContentTitle, ContentText and SmallIcon is required
         // REFERENCE: https://www.jianshu.com/p/5792cf3090bc
-        val notification = NotificationCompat.Builder(this.applicationContext, CHANNEL_ID)
+        startForeground(
+            FOREGROUND_ID, NotificationCompat.Builder(this.applicationContext, CHANNEL_ID)
             .setContentTitle(getString(R.string.app_name))
             .setContentText(getString(R.string.service_notification_text))
             .setContentIntent(PendingIntent.getActivity(
@@ -124,9 +149,11 @@ class BackgroundMissionService : Service() {
                 Intent(this, MainActivity::class.java),
                 0
             ))
-            .setSmallIcon(R.drawable.ic_dash)
+            .setSmallIcon(R.drawable.ic_launcher_foreground)
             .build()
-        startForeground(FOREGROUND_ID, notification)
+        )
+
+        notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
 
         // Get the temp file
         try {
@@ -165,6 +192,7 @@ class BackgroundMissionService : Service() {
 
     override fun onDestroy() {
 
+        notificationManager?.cancelAll()
         timer.cancel()
         timer.purge()
         timer = Timer(true)

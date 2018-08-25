@@ -1,6 +1,16 @@
 <h1 align=center>更新日志</h1>
 
 ```markdown
+## [0.3.6] - 2018-08-25
+- 0.3.5(776) -> 0.3.6(783)
+
+### Finished
+- Set random seed which used to generate check points
+- Display index when touch markers during sequential missions
+- Push notification when check in background
+```
+
+```markdown
 ## [0.3.5] - 2018-08-25
 - 0.3.4(755) -> 0.3.5(776)
 

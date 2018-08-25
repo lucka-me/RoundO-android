@@ -185,6 +185,7 @@ class MissionManager(private var context: Context, private val missionListener: 
      * @property [center] 中心位置
      * @property [sequential] 是否为顺序任务
      * @property [radius] 任务圈半径
+     * @property [seed] 随机种子
      * @property [startTime] 开始时间
      * @property [targetTime] 设定时间（秒）
      * @property [pastTime] 已耗时（秒）
@@ -198,6 +199,7 @@ class MissionManager(private var context: Context, private val missionListener: 
         var center: GeoPoint = GeoPoint(Location("")),
         var sequential: Boolean = true,
         var radius: Double = 0.0,
+        var seed: Long = 0L,
         var startTime: Date = Date(),
         var targetTime: Int = 0,
         var pastTime: Int = 0,
@@ -250,6 +252,9 @@ class MissionManager(private var context: Context, private val missionListener: 
                     cal.get(Calendar.HOUR_OF_DAY) * 3600 + cal.get(Calendar.MINUTE) * 60
                 data.sequential = sharedPreferences
                     .getBoolean(context.getString(R.string.setup_basic_sequential_key), false)
+                val prefSeed = sharedPreferences
+                    .getString(context.getString(R.string.setup_advanced_seed_key), "0").toLong()
+                data.seed = if (prefSeed == 0L) data.startTime.time else prefSeed
             } catch (error: Exception) {
                 state = MissionState.Stopped
                 uiThread {
@@ -262,7 +267,8 @@ class MissionManager(private var context: Context, private val missionListener: 
                 return@doAsync
             }
             trackPointList.clear()
-            checkPointList = generateCheckPointList(centerLocation, data.radius, waypointCount)
+            checkPointList =
+                generateCheckPointList(centerLocation, data.radius, waypointCount, data.seed)
             // Just for demo
             Thread.sleep(5000)
             state = MissionState.Started
@@ -416,11 +422,14 @@ class MissionManager(private var context: Context, private val missionListener: 
     /**
      * 生成任务点列表
      *
-     * 注：直接在副线程中更新 [checkPointList] 可能无效，原因未知
+     * ## Changelog
+     * ### 0.3.6
+     * - 支持设定随机种子 [seed]
      *
      * @param [center] 中心点位置
      * @param [radius] 任务圈半径（米）
      * @param [count] 任务点数量
+     * @param [seed] 随机种子
      *
      * @return 生成的任务点列表
      *
@@ -429,9 +438,11 @@ class MissionManager(private var context: Context, private val missionListener: 
      * @author lucka-me
      * @since 0.1.6
      */
-    private fun generateCheckPointList(center: Location, radius: Double, count: Int): ArrayList<CheckPoint> {
+    private fun generateCheckPointList(
+        center: Location, radius: Double, count: Int, seed: Long
+    ): ArrayList<CheckPoint> {
 
-        val random = Random()
+        val random = Random(seed)
 
         val resultList: ArrayList<CheckPoint> = ArrayList(0)
         // Convert center LatLng to radian
