@@ -270,7 +270,7 @@ class MissionManager(private var context: Context, private val missionListener: 
             checkPointList =
                 generateCheckPointList(centerLocation, data.radius, waypointCount, data.seed)
             // Just for demo
-            Thread.sleep(5000)
+            Thread.sleep(3000)
             state = MissionState.Started
             data.started = true
             uiThread {
@@ -345,6 +345,7 @@ class MissionManager(private var context: Context, private val missionListener: 
         val objectInputStream: ObjectInputStream
 
         if (!tempFile.exists()) {
+            state = MissionState.Stopped
             return
         }
 
@@ -390,7 +391,7 @@ class MissionManager(private var context: Context, private val missionListener: 
             if (data.sequential) {
                 for (i: Int in data.checked until checkPointList.size) {
                     if (location.distanceTo(checkPointList[i].location) < 40) {
-                        checkPointList[i].isChecked = true
+                        checkPointList[i].checked = true
                         newCheckedIndexList.add(i)
                     } else {
                         break
@@ -399,14 +400,14 @@ class MissionManager(private var context: Context, private val missionListener: 
                 data.checked += newCheckedIndexList.size
                 totalCheckedCount = data.checked
             } else {
-                for (waypoint in checkPointList) {
-                    if (!waypoint.isChecked) {
-                        if (location.distanceTo(waypoint.location) < 40) {
-                            newCheckedIndexList.add(checkPointList.indexOf(waypoint))
-                            waypoint.isChecked = true
-                        }
+                for (i: Int in data.checked until checkPointList.size) {
+                    if (!checkPointList[i].checked &&
+                        location.distanceTo(checkPointList[i].location) < 40
+                    ) {
+                        newCheckedIndexList.add(i)
+                        checkPointList[i].checked = true
                     }
-                    totalCheckedCount += if (waypoint.isChecked) 1 else 0
+                    totalCheckedCount += if (checkPointList[i].checked) 1 else 0
                 }
                 data.checked += newCheckedIndexList.size
             }

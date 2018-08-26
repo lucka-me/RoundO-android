@@ -8,7 +8,7 @@ import android.location.Location
  * ## 属性列表
  * - [longitude]
  * - [latitude]
- * - [isChecked]
+ * - [checked]
  *
  * ## 访问器列表
  * - [location]
@@ -21,16 +21,16 @@ import android.location.Location
  *
  * @param [longitude] 经度
  * @param [latitude] 纬度
- * @param [isChecked] 任务点是否已完成，默认未完成
+ * @param [checked] 任务点是否已完成，默认未完成
  *
  * @author lucka-me
  * @since 0.1.4
  *
  * @see [GeoPoint]
  *
- * @property [isChecked] 是否已签到
+ * @property [checked] 是否已签到
  */
-class CheckPoint(longitude: Double, latitude: Double, var isChecked: Boolean = false) :
+class CheckPoint(longitude: Double, latitude: Double, var checked: Boolean = false) :
     GeoPoint(longitude, latitude) {
 
     /**
@@ -39,7 +39,7 @@ class CheckPoint(longitude: Double, latitude: Double, var isChecked: Boolean = f
      * @param [location] 位置
      * @param [isChecked] 任务点是否已完成，默认未完成
      *
-     * @author lucka
+     * @author lucka-me
      * @since 0.1.7
      *
      * @see [CheckPoint]

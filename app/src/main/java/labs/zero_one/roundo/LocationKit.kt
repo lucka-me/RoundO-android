@@ -8,7 +8,6 @@ import android.location.LocationListener
 import android.location.LocationManager
 import android.os.Bundle
 import android.support.v4.app.ActivityCompat
-import com.minemap.minemapsdk.geometry.LatLng
 import kotlin.math.*
 
 /**
@@ -22,6 +21,8 @@ import kotlin.math.*
  * - [ELLIPSOID_A]
  * - [ELLIPSOID_EE]
  * - [DEFAULT_PROVIDER]
+ * - [DEFAULT_LONGITUDE]
+ * - [DEFAULT_LATITUDE]
  *
  * ## 子类列表
  * - [locationKitListener]
@@ -38,7 +39,7 @@ import kotlin.math.*
  * @author lucka-me
  * @since 0.1.4
  *
- * @property [lastLocation] 最新位置
+ * @property [lastLocation] 最新位置（已修正）
  * @property [isLocationAvailable] 位置是否可用
  * @property [locationManager] 原生定位管理器
  * @property [locationListener] 原生定位消息监听器
@@ -47,6 +48,8 @@ import kotlin.math.*
  * @property [EARTH_R] 地球平均半径（米）
  * @property [DEFAULT_PROVIDER] 定位 Provider
  * @property [FIXED_PROVIDER] 修正坐标后位置的 Provider
+ * @property [DEFAULT_LONGITUDE] 默认经度
+ * @property [DEFAULT_LATITUDE] 默认维度
  */
 class LocationKit(
     private var context: Context,
@@ -74,7 +77,6 @@ class LocationKit(
             lastLocation = fixCoordinate(location)
             isLocationAvailable = true
             locationKitListener.onLocationUpdated(lastLocation)
-            LatLng().wrap()
         }
 
         override fun onProviderDisabled(provider: String?) {
@@ -161,8 +163,8 @@ class LocationKit(
         ) {
             val location = locationManager.getLastKnownLocation(DEFAULT_PROVIDER)
             if (location == null) {
-                lastLocation.longitude = 108.947031
-                lastLocation.latitude = 34.259441
+                lastLocation.longitude = DEFAULT_LONGITUDE
+                lastLocation.latitude = DEFAULT_LATITUDE
                 isLocationAvailable = false
             } else {
                 lastLocation = fixCoordinate(location)
@@ -173,8 +175,8 @@ class LocationKit(
                 locationKitListener.onProviderDisabled()
             }
         } else {
-            lastLocation.longitude = 108.947031
-            lastLocation.latitude = 34.259441
+            lastLocation.longitude = DEFAULT_LONGITUDE
+            lastLocation.latitude = DEFAULT_LATITUDE
             isLocationAvailable = false
         }
     }
@@ -185,15 +187,17 @@ class LocationKit(
      * ## Changelog
      * ### 0.3.3
      * - 返回是否需要显示请求权限对话框，由上层显示或做其他处理
+     * ### 0.3.7
      *
      * @param [activity] 应用的 Activity
+     * @param [requestCode] 请求代码
      *
      * @return 是否需要显示请求权限对话框
      *
      * @author lucka-me
      * @since 0.1.5
      */
-    fun requestPermission(activity: MainActivity): Boolean {
+    fun requestPermission(activity: MainActivity, requestCode: Int): Boolean {
         if (ActivityCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION) !=
             PackageManager.PERMISSION_GRANTED
         ) {
@@ -208,7 +212,7 @@ class LocationKit(
                 ActivityCompat.requestPermissions(
                     activity,
                     arrayOf(Manifest.permission.ACCESS_FINE_LOCATION),
-                    MainActivity.AppRequest.PermissionLocation.code
+                    requestCode
                 )
             }
         }
@@ -260,6 +264,8 @@ class LocationKit(
         const val UPDATE_DISTANCE: Float = 1.0f
         const val DEFAULT_PROVIDER = LocationManager.NETWORK_PROVIDER
         const val FIXED_PROVIDER = "fixed"
+        const val DEFAULT_LONGITUDE = 108.947031
+        const val DEFAULT_LATITUDE = 34.259441
 
         /**
          * 将 WGS-84 坐标系转换为 GCJ-02 坐标系

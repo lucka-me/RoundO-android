@@ -31,7 +31,7 @@ open class GeoPoint (var longitude: Double, var latitude: Double) : Serializable
      * 由于通常实际使用的是 [Location] 实体而非直接使用经纬度属性，而 Location 类无法序列化/反序列化，因此使用
      * 访问器获得/设置它。
      *
-     * @author lucka
+     * @author lucka-me
      * @since 0.3
      */
     var location: Location
@@ -51,7 +51,7 @@ open class GeoPoint (var longitude: Double, var latitude: Double) : Serializable
      *
      * @param [location] 位置
      *
-     * @author lucka
+     * @author lucka-me
      * @since 0.3
      *
      * @see [GeoPoint]

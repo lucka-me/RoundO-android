@@ -210,7 +210,6 @@ class SetupActivity : AppCompatActivity() {
                     // Back to the MainActivity and start mission
                     setResult(Activity.RESULT_OK)
                     onBackPressed()
-                    //finish()
                     return true
                 }
             }

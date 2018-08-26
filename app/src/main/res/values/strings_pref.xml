@@ -17,6 +17,7 @@
     </string>
     <string name="pref_other_background_settings">相关设置</string>
     <string name="pref_other_background_settings_flyme">Flyme 用户请打开多任务界面并锁定本应用。</string>
+    <string name="pref_other_background_settings_not_found">未能开启相关设置页面</string>
     <string name="pref_other_about_key">pref_about</string>
     <string name="pref_other_about_title">关于</string>
 

@@ -186,10 +186,11 @@ class MapKit(private val context: Context) {
      * @author lucka-me
      * @since 0.1.6
      */
-    fun moveTo(location: Location, resetBearing: Boolean = true){
+    fun moveTo(location: Location, resetBearing: Boolean = true, resetTilt: Boolean = true){
         if (isMapInitialized) {
-            var cameraBuilder = CameraPosition.Builder().target(LatLng(location))
-            if (resetBearing) cameraBuilder = cameraBuilder.bearing(0.0)
+            val cameraBuilder = CameraPosition.Builder().target(LatLng(location))
+            if (resetBearing) cameraBuilder.bearing(0.0)
+            if (resetTilt) cameraBuilder.tilt(0.0)
             mineMap.animateCamera(CameraUpdateFactory.newCameraPosition(cameraBuilder.build()))
         } else {
             addOnMapInitialized {

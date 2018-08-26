@@ -24,10 +24,10 @@ class TrumeKit() {
          *
          * @return [Boolean] 是否为模拟器
          *
-         * @see <a href="https://stackoverflow.com/a/21505193">Stack Overflow</a>
-         *
          * @author lucka-me
          * @since 0.1.4
+         *
+         * @see <a href="https://stackoverflow.com/a/21505193">Stack Overflow</a>
          */
         fun checkEmulator(): Boolean {
             return Build.FINGERPRINT.startsWith("generic") ||

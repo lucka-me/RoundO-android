@@ -5,6 +5,7 @@ import android.app.AlertDialog
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.location.Location
+import android.os.Build
 import android.os.Bundle
 import android.provider.Settings
 import android.support.v4.content.ContextCompat
@@ -77,10 +78,10 @@ class MainActivity : AppCompatActivity() {
             override fun onProviderDisabled() {
                 DialogKit.showDialog(
                     this@MainActivity,
-                    R.string.alert_title, R.string.location_provider_disabled, R.string.confirm,
+                    R.string.alert_title, R.string.location_provider_disabled,
                     negativeButtonTextId = R.string.permission_system_settings,
-                    negativeButtonListener = {
-                        _, _ -> startActivity(Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS))
+                    negativeButtonListener = { _, _ ->
+                        startActivity(Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS))
                     },
                     cancelable = false
                 )
@@ -101,11 +102,12 @@ class MainActivity : AppCompatActivity() {
         object : MissionManager.MissionListener {
 
             override fun onStarted(isResumed: Boolean) {
+                mapKit.clearMarkers()
                 for (i in 0 until missionManager.checkPointList.size) {
                     mapKit.addMarkerAt(
                         missionManager.checkPointList[i].location,
                         type =
-                        if (missionManager.checkPointList[i].isChecked) {
+                        if (missionManager.checkPointList[i].checked) {
                             MapKit.MarkerType.Checked
                         } else {
                             MapKit.MarkerType.Unchecked
@@ -259,15 +261,12 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        // Stop the background service
-        //backgroundMissionService = Intent(this, BackgroundMissionService::class.java)
-
         // Initialize Dashboard
         initDashboard()
 
         // Handle the permissions
         locationKit = LocationKit(this, locationKitListener)
-        if (locationKit.requestPermission(this)) {
+        if (locationKit.requestPermission(this, AppRequest.PermissionLocation.code)) {
             DialogKit.showDialog(
                 this,
                 R.string.permission_request_title,
@@ -348,7 +347,10 @@ class MainActivity : AppCompatActivity() {
 
             val backgroundMissionService =
                 Intent(this, BackgroundMissionService::class.java)
-            startService(backgroundMissionService)
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O)
+                startForegroundService(backgroundMissionService)
+            else
+                startService(backgroundMissionService)
         }
 
         super.onPause()
@@ -380,6 +382,8 @@ class MainActivity : AppCompatActivity() {
                 },
                 negativeButtonTextId = R.string.cancel
                 )
+        } else {
+            super.onBackPressed()
         }
     }
 
@@ -418,7 +422,7 @@ class MainActivity : AppCompatActivity() {
                 ) {
                     locationKit.startUpdate()
                 } else {
-                    locationKit.requestPermission(this)
+                    locationKit.requestPermission(this, requestCode)
                 }
             }
         }
@@ -447,7 +451,7 @@ class MainActivity : AppCompatActivity() {
 
             initDashboard()
             var checkedCount = 0
-            for (waypoint in missionManager.checkPointList) if (waypoint.isChecked) checkedCount++
+            for (waypoint in missionManager.checkPointList) if (waypoint.checked) checkedCount++
             updateDashboard(checkedCount, true)
 
             dialogBuilder

@@ -1,6 +1,17 @@
 <h1 align=center>更新日志</h1>
 
 ```markdown
+## [0.3.7] - 2018-08-25
+- Adapted for Android O
+- 0.3.6(783) -> 0.3.7(818)
+
+### Fixed
+- In Android O, app crashes when open the Background Limitation Explanation
+- In Android O, Notification doesn't show when background service activated
+- In Android O, app icon display incorrectly
+```
+
+```markdown
 ## [0.3.6] - 2018-08-25
 - 0.3.5(776) -> 0.3.6(783)
 

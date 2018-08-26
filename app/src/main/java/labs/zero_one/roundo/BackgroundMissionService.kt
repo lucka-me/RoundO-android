@@ -1,11 +1,13 @@
 package labs.zero_one.roundo
 
+import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
 import android.app.Service
 import android.content.Context
 import android.content.Intent
 import android.location.Location
+import android.os.Build
 import android.os.IBinder
 import android.support.v4.app.NotificationCompat
 import android.util.Log
@@ -41,6 +43,8 @@ import java.util.*
  * ## 自定义方法列表
  * - [saveMission]
  *
+ * @see <a href="https://stackoverflow.com/a/44705829">Foreground service notification in Android O | Stack Overflow</a>
+ *
  * @author lucka-me
  * @since 0.3.3
  *
@@ -69,7 +73,7 @@ class BackgroundMissionService : Service() {
                 if (missionData.sequential) {
                     for (i: Int in missionData.checked until checkPointList.size) {
                         if (location.distanceTo(checkPointList[i].location) < 40) {
-                            checkPointList[i].isChecked = true
+                            checkPointList[i].checked = true
                             newCheckedIndexList.add(i)
                         } else {
                             break
@@ -79,13 +83,13 @@ class BackgroundMissionService : Service() {
                     totalCheckedCount = missionData.checked
                 } else {
                     for (waypoint in checkPointList) {
-                        if (!waypoint.isChecked) {
+                        if (!waypoint.checked) {
                             if (location.distanceTo(waypoint.location) < 40) {
                                 newCheckedIndexList.add(checkPointList.indexOf(waypoint))
-                                waypoint.isChecked = true
+                                waypoint.checked = true
                             }
                         }
-                        totalCheckedCount += if (waypoint.isChecked) 1 else 0
+                        totalCheckedCount += if (waypoint.checked) 1 else 0
                     }
                     missionData.checked += newCheckedIndexList.size
                 }
@@ -136,6 +140,20 @@ class BackgroundMissionService : Service() {
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
 
+        notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            val notificationChannel =
+                NotificationChannel(
+                    CHANNEL_ID,
+                    getString(R.string.app_name),
+                    NotificationManager.IMPORTANCE_DEFAULT
+                )
+            notificationChannel.description =
+                getString(R.string.service_notification_channel_description)
+            notificationManager?.createNotificationChannel(notificationChannel)
+        }
+
         // Start foreground
         // ContentTitle, ContentText and SmallIcon is required
         // REFERENCE: https://www.jianshu.com/p/5792cf3090bc
@@ -152,8 +170,6 @@ class BackgroundMissionService : Service() {
             .setSmallIcon(R.drawable.ic_launcher_foreground)
             .build()
         )
-
-        notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
 
         // Get the temp file
         try {

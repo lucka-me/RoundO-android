@@ -8,6 +8,7 @@ import android.os.Bundle
 import android.provider.Settings
 import android.support.v7.app.AppCompatActivity
 import android.view.MenuItem
+import android.widget.Toast
 import com.takisoft.fix.support.v7.preference.PreferenceFragmentCompat
 import org.jetbrains.anko.support.v4.defaultSharedPreferences
 
@@ -54,30 +55,39 @@ class PreferenceMainActivity : AppCompatActivity() {
             findPreference(getString(R.string.pref_other_background_key))
                 .setOnPreferenceClickListener {
                     val romType = RomKit.getType()
-                    var negativeButtonListener: ((DialogInterface, Int) -> (Unit))? = null
-                    if (romType == RomKit.RomType.EMUI) {
-                        negativeButtonListener = { _, _ ->
-                            startActivity(RomKit.EMUI_BACKGROUND_MANAGER)
+                    val negativeButtonListener: ((DialogInterface, Int) -> (Unit))? =
+                        when {
+                            romType == RomKit.RomType.EMUI -> { _, _ ->
+                                startActivity(RomKit.EMUI_BACKGROUND_MANAGER)
+                            }
+                            romType == RomKit.RomType.MIUI -> { _, _ ->
+                                    startActivity(RomKit.MIUI_BACKGROUND_MANAGER)
+                            }
+                            romType == RomKit.RomType.FLYME -> { _, _ ->
+                                DialogKit.showDialog(
+                                    requireContext(),
+                                    R.string.pref_other_background_title,
+                                    R.string.pref_other_background_settings_flyme,
+                                    icon = requireContext()
+                                        .getDrawable(R.drawable.ic_pref_other_background)
+                                )
+                            }
+                            Build.VERSION.SDK_INT >= Build.VERSION_CODES.O -> { _, _ ->
+                                try {
+                                    startActivity(
+                                        Intent(Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS)
+                                    )
+                                } catch (error: Exception) {
+                                    Toast.makeText(
+                                        requireContext(),
+                                        R.string.pref_other_background_settings_not_found,
+                                        Toast.LENGTH_SHORT
+                                    ).show()
+                                }
+
+                            }
+                            else -> null
                         }
-                    } else if (romType == RomKit.RomType.MIUI) {
-                        negativeButtonListener = { _, _ ->
-                            startActivity(RomKit.MIUI_BACKGROUND_MANAGER)
-                        }
-                    } else if (romType == RomKit.RomType.FLYME) {
-                        negativeButtonListener = { _, _ ->
-                            DialogKit.showDialog(
-                                requireContext(),
-                                R.string.pref_other_background_title,
-                                R.string.pref_other_background_settings_flyme,
-                                icon = requireContext()
-                                    .getDrawable(R.drawable.ic_pref_other_background)
-                            )
-                        }
-                    } else if (Build.VERSION.SDK_INT >= 23) {
-                        negativeButtonListener = { _, _ ->
-                            startActivity(Intent(Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS))
-                        }
-                    }
                     DialogKit.showDialog(
                         requireContext(),
                         R.string.pref_other_background_title,
