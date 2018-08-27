@@ -7,7 +7,7 @@
 
 ### Fixed
 - In Android O, app crashes when open the Background Limitation Explanation
-- In Android O, Notification doesn't show when background service activated
+- In Android O, notification doesn't show when background service activated
 - In Android O, app icon display incorrectly
 ```
 
