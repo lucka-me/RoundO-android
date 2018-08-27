@@ -9,6 +9,7 @@ import android.content.Intent
 import android.location.Location
 import android.os.Build
 import android.os.IBinder
+import android.provider.Settings
 import android.support.v4.app.NotificationCompat
 import android.util.Log
 import android.widget.Toast
@@ -34,6 +35,9 @@ import java.util.*
  * - [locationKitListener]
  * - [locationKit]
  * - [timer]
+ * - [notificationManager]
+ * - [notificationId]
+ * - [providerDisabledNotificationId]
  *
  * ## 重写方法列表
  * - [onStartCommand]
@@ -55,6 +59,9 @@ import java.util.*
  * @property [locationKitListener] 位置工具监听器
  * @property [locationKit] 位置工具
  * @property [timer] 计时器，用于定时保存数据
+ * @property [notificationManager] 通知管理器
+ * @property [notificationId] 通知 ID
+ * @property [providerDisabledNotificationId] 定位不可用时发出的通知的 ID，用于在定位可用后自动取消通知
  */
 class BackgroundMissionService : Service() {
 
@@ -121,11 +128,35 @@ class BackgroundMissionService : Service() {
                 }
             }
 
-            override fun onProviderDisabled() {
-                // Notify user
+            override fun onProviderEnabled() {
+                val id = providerDisabledNotificationId
+                if (id != null) {
+                    notificationManager?.cancel(id)
+                    providerDisabledNotificationId = null
+                }
             }
 
-            override fun onProviderEnabled() { }
+            override fun onProviderSwitchedTo(newProvider: String) { }
+
+            override fun onProviderDisabled() {
+                notificationManager?.notify(
+                    notificationId,
+                    NotificationCompat
+                        .Builder(this@BackgroundMissionService, CHANNEL_ID)
+                        .setContentTitle(getString(R.string.location_provider_disabled_title))
+                        .setContentText(getString(R.string.location_provider_disabled_text))
+                        .setSmallIcon(R.drawable.ic_warning)
+                        .setContentIntent(PendingIntent.getActivity(
+                            this@BackgroundMissionService,
+                            0,
+                            Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS),
+                            0
+                        ))
+                        .build()
+                )
+                providerDisabledNotificationId = notificationId
+                notificationId++
+            }
 
             override fun onException(error: Exception) {
                 // Notify user
@@ -137,6 +168,7 @@ class BackgroundMissionService : Service() {
 
     private var notificationManager: NotificationManager? = null
     private var notificationId: Int = 2
+    private var providerDisabledNotificationId: Int? = null
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
 
@@ -158,17 +190,18 @@ class BackgroundMissionService : Service() {
         // ContentTitle, ContentText and SmallIcon is required
         // REFERENCE: https://www.jianshu.com/p/5792cf3090bc
         startForeground(
-            FOREGROUND_ID, NotificationCompat.Builder(this.applicationContext, CHANNEL_ID)
-            .setContentTitle(getString(R.string.app_name))
-            .setContentText(getString(R.string.service_notification_text))
-            .setContentIntent(PendingIntent.getActivity(
-                this,
-                0,
-                Intent(this, MainActivity::class.java),
-                0
-            ))
-            .setSmallIcon(R.drawable.ic_launcher_foreground)
-            .build()
+            FOREGROUND_ID,
+            NotificationCompat.Builder(this.applicationContext, CHANNEL_ID)
+                .setContentTitle(getString(R.string.app_name))
+                .setContentText(getString(R.string.service_notification_text))
+                .setContentIntent(PendingIntent.getActivity(
+                    this,
+                    0,
+                    Intent(this, MainActivity::class.java),
+                    0
+                ))
+                .setSmallIcon(R.drawable.ic_launcher_foreground)
+                .build()
         )
 
         // Get the temp file

@@ -61,7 +61,7 @@ class PreferenceMainActivity : AppCompatActivity() {
                                 startActivity(RomKit.EMUI_BACKGROUND_MANAGER)
                             }
                             romType == RomKit.RomType.MIUI -> { _, _ ->
-                                    startActivity(RomKit.MIUI_BACKGROUND_MANAGER)
+                                startActivity(RomKit.MIUI_BACKGROUND_MANAGER)
                             }
                             romType == RomKit.RomType.FLYME -> { _, _ ->
                                 DialogKit.showDialog(

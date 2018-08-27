@@ -48,5 +48,6 @@
     <string name="permission_system_settings">设置</string>
 
     <!-- Location -->
-    <string name="location_provider_disabled">定位服务不可用</string>
+    <string name="location_provider_disabled_title">定位服务不可用</string>
+    <string name="location_provider_disabled_text">请打开您的定位服务以获取最新的位置</string>
 </resources>

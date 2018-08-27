@@ -73,7 +73,7 @@ class MainActivity : AppCompatActivity() {
             override fun onProviderDisabled() {
                 DialogKit.showDialog(
                     this@MainActivity,
-                    R.string.alert_title, R.string.location_provider_disabled,
+                    R.string.location_provider_disabled_title, R.string.location_provider_disabled_text,
                     negativeButtonTextId = R.string.permission_system_settings,
                     negativeButtonListener = { _, _ ->
                         startActivity(Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS))
@@ -86,8 +86,16 @@ class MainActivity : AppCompatActivity() {
 
             }
 
-            override fun onException(error: Exception) {
+            override fun onProviderSwitchedTo(newProvider: String) {
 
+            }
+
+            override fun onException(error: Exception) {
+                if (error.message == getString(R.string.err_location_permission_denied)) {
+                    LocationKit.showRequestPermissionDialog(this@MainActivity)
+                } else {
+                    DialogKit.showSimpleAlert(this@MainActivity, error.message)
+                }
             }
     }
     private lateinit var locationKit: LocationKit
@@ -259,16 +267,7 @@ class MainActivity : AppCompatActivity() {
         // Handle the permissions
         locationKit = LocationKit(this, locationKitListener)
         if (locationKit.requestPermission(this, AppRequest.PermissionLocation.code)) {
-            DialogKit.showDialog(
-                this,
-                R.string.permission_request_title,
-                R.string.permission_explain_location,
-                positiveButtonTextId = R.string.confirm,
-                negativeButtonTextId = R.string.permission_system_settings,
-                negativeButtonListener = { _, _ ->
-                    startActivity(Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS))
-                },
-                cancelable = false)
+            LocationKit.showRequestPermissionDialog(this)
         }
 
         // Setup Map

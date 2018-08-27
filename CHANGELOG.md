@@ -1,6 +1,15 @@
 <h1 align=center>更新日志</h1>
 
 ```markdown
+## [0.3.8] - 2018-08-27
+- 0.3.7(818) -> 0.3.8(847)
+
+### Finished
+- Switch between GPS and Network provider automatically
+- Notification for background service when location disabled
+```
+
+```markdown
 ## [0.3.7] - 2018-08-25
 - Adapted for Android O
 - 0.3.6(783) -> 0.3.7(818)

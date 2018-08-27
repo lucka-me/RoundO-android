@@ -2,25 +2,37 @@ package labs.zero_one.roundo
 
 import android.Manifest
 import android.content.Context
+import android.content.Intent
 import android.content.pm.PackageManager
+import android.location.Criteria
 import android.location.Location
 import android.location.LocationListener
 import android.location.LocationManager
 import android.os.Bundle
+import android.provider.Settings
 import android.support.v4.app.ActivityCompat
+import android.util.Log
 import kotlin.math.*
 
 /**
- * 位置工具，封装 LocationManager，简化相关接口和方法，并提供坐标系转换等特色功能
+ * 位置工具，封装 LocationManager，简化相关接口和方法，并提供坐标系转换等特色功能，可以在 GPS 和网络定位间自动切换。
+ *
+ * ## Changelog
+ * ### 0.3.8
+ * - Switch between GPS and Network provider automatically
  *
  * ## 属性列表
  * - [lastLocation]
  * - [isLocationAvailable]
  * - [locationManager]
+ * - [currentProvider]
+ * - [criteria]
  * - [locationListener]
+ * - [assistLocationListener]
  * - [ELLIPSOID_A]
  * - [ELLIPSOID_EE]
- * - [DEFAULT_PROVIDER]
+ * - [EARTH_R]
+ * - [FIXED_PROVIDER]
  * - [DEFAULT_LONGITUDE]
  * - [DEFAULT_LATITUDE]
  *
@@ -32,6 +44,7 @@ import kotlin.math.*
  * - [startUpdate]
  * - [stopUpdate]
  * - [fixCoordinate]
+ * - [showRequestPermissionDialog]
  *
  * @param [context] 环境
  * @param [locationKitListener] 消息监听器
@@ -42,11 +55,13 @@ import kotlin.math.*
  * @property [lastLocation] 最新位置（已修正）
  * @property [isLocationAvailable] 位置是否可用
  * @property [locationManager] 原生定位管理器
+ * @property [currentProvider] 最新的定位源
+ * @property [criteria] 定位要求，用于获取最佳定位源
  * @property [locationListener] 原生定位消息监听器
+ * @property [assistLocationListener] 辅助监听器，用于切换定位源之后监听原有定位源，当原有定位源可用时向 [locationListener] 发送消息
  * @property [ELLIPSOID_A] 椭球参数：长半轴（米）
  * @property [ELLIPSOID_EE] 椭球参数：扁率
  * @property [EARTH_R] 地球平均半径（米）
- * @property [DEFAULT_PROVIDER] 定位 Provider
  * @property [FIXED_PROVIDER] 修正坐标后位置的 Provider
  * @property [DEFAULT_LONGITUDE] 默认经度
  * @property [DEFAULT_LATITUDE] 默认维度
@@ -60,6 +75,8 @@ class LocationKit(
     var isLocationAvailable: Boolean = false
     private val locationManager =
         context.getSystemService(Context.LOCATION_SERVICE) as LocationManager
+    private var currentProvider = LocationManager.GPS_PROVIDER
+    private val criteria = Criteria()
     private val locationListener = object : LocationListener {
 
         override fun onLocationChanged(location: Location?) {
@@ -80,22 +97,61 @@ class LocationKit(
         }
 
         override fun onProviderDisabled(provider: String?) {
-            if (provider == DEFAULT_PROVIDER) {
-                isLocationAvailable = false
-                locationKitListener.onProviderDisabled()
+
+            Log.i("TESTRO", "定位不可用：" + provider)
+            if (provider == currentProvider) {
+                val newProvider = locationManager.getBestProvider(criteria ,true)
+                if (newProvider != LocationManager.GPS_PROVIDER &&
+                    newProvider != LocationManager.NETWORK_PROVIDER
+                ) {
+                    locationKitListener.onProviderDisabled()
+                } else {
+                    val oldProvider = currentProvider
+                    currentProvider = newProvider
+                    stopUpdate()
+                    startUpdate(false)
+                    startUpdateAssist(oldProvider)
+                    Log.i("TESTRO", "切换至定位源：" + currentProvider)
+                    locationKitListener.onProviderSwitchedTo(currentProvider)
+                }
             }
         }
 
         override fun onProviderEnabled(provider: String?) {
-            if (provider == DEFAULT_PROVIDER) {
-                isLocationAvailable = true
+
+            Log.i("TESTRO", "定位源可用：" + provider)
+            val newProvider = locationManager.getBestProvider(criteria ,true)
+            if (newProvider != LocationManager.GPS_PROVIDER &&
+                newProvider != LocationManager.NETWORK_PROVIDER
+            ) {
+                locationKitListener.onProviderDisabled()
+                currentProvider = LocationManager.GPS_PROVIDER
+            } else if (newProvider != currentProvider) {
+                currentProvider = newProvider
+                stopUpdate()
+                startUpdate(false)
+                Log.i("TESTRO", "切换至定位源：" + currentProvider)
+                locationKitListener.onProviderSwitchedTo(currentProvider)
+            } else {
                 locationKitListener.onProviderEnabled()
             }
+
         }
 
         override fun onStatusChanged(provider: String?, status: Int, extras: Bundle?) {
 
         }
+    }
+
+    private val assistLocationListener = object : LocationListener {
+        override fun onProviderEnabled(provider: String?) {
+            Log.i("TESTRO", "检测定位源可用：" + provider)
+            locationListener.onProviderEnabled(provider)
+            locationManager.removeUpdates(this)
+        }
+        override fun onLocationChanged(location: Location?) {}
+        override fun onProviderDisabled(provider: String?) {}
+        override fun onStatusChanged(provider: String?, status: Int, extras: Bundle?) {}
     }
 
     /**
@@ -104,7 +160,7 @@ class LocationKit(
      * ## 消息列表
      * - [onLocationUpdated]
      * - [onProviderDisabled]
-     * - [onProviderEnabled]
+     * - [onProviderSwitchedTo]
      * - [onException]
      *
      * ## Changelog
@@ -123,19 +179,26 @@ class LocationKit(
          */
         fun onLocationUpdated(location: Location)
         /**
-         * 网络辅助定位被启用
+         * 定位被关闭
          *
          * @author lucka-me
          * @since 0.1.4
          */
         fun onProviderDisabled()
         /**
-         * 网络辅助定位被禁用
+         * 定位开启
          *
          * @author lucka-me
          * @since 0.1.4
          */
         fun onProviderEnabled()
+        /**
+         * 定位源被切换
+         *
+         * @author lucka-me
+         * @since 0.3.8
+         */
+        fun onProviderSwitchedTo(newProvider: String)
         /**
          * 返回错误
          *
@@ -158,10 +221,13 @@ class LocationKit(
      * @since 0.1.5
      */
     init {
+        criteria.accuracy = Criteria.ACCURACY_FINE
         if (ActivityCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION) ==
             PackageManager.PERMISSION_GRANTED
         ) {
-            val location = locationManager.getLastKnownLocation(DEFAULT_PROVIDER)
+            // Must get one whatever the provider is
+            val location = locationManager
+                .getLastKnownLocation(locationManager.getBestProvider(criteria, true))
             if (location == null) {
                 lastLocation.longitude = DEFAULT_LONGITUDE
                 lastLocation.latitude = DEFAULT_LATITUDE
@@ -170,9 +236,6 @@ class LocationKit(
                 lastLocation = fixCoordinate(location)
                 isLocationAvailable = true
                 locationListener.onLocationChanged(lastLocation)
-            }
-            if (!locationManager.isProviderEnabled(DEFAULT_PROVIDER)) {
-                locationKitListener.onProviderDisabled()
             }
         } else {
             lastLocation.longitude = DEFAULT_LONGITUDE
@@ -227,13 +290,21 @@ class LocationKit(
      * @author lucka-me
      * @since 0.1.4
      */
-    fun startUpdate(): Boolean {
+    fun startUpdate(resetProvider: Boolean = true): Boolean {
+        if (resetProvider) {
+            val newProvider = locationManager.getBestProvider(criteria ,true)
+            if (newProvider == LocationManager.GPS_PROVIDER ||
+                newProvider == LocationManager.NETWORK_PROVIDER
+            ) {
+                currentProvider = newProvider
+            }
+        }
         return if (ActivityCompat
                 .checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION) ==
             PackageManager.PERMISSION_GRANTED
         ) {
             locationManager.requestLocationUpdates(
-                DEFAULT_PROVIDER,
+                currentProvider,
                 UPDATE_INTERVAL,
                 UPDATE_DISTANCE,
                 locationListener
@@ -256,13 +327,37 @@ class LocationKit(
         locationManager.removeUpdates(locationListener)
     }
 
+    /**
+     * 开始用辅助监听器 [assistLocationListener] 监听定位源
+     *
+     * @param [provider] 要监听的定位源
+     *
+     * @author lucka-me
+     * @since 0.3.8
+     */
+    private fun startUpdateAssist(provider: String) {
+        if (ActivityCompat
+            .checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION) ==
+            PackageManager.PERMISSION_GRANTED
+        ) {
+            locationManager.requestLocationUpdates(
+                provider,
+                UPDATE_INTERVAL,
+                UPDATE_DISTANCE,
+                assistLocationListener
+            )
+        } else {
+            val error = Exception(context.getString(R.string.err_location_permission_denied))
+            locationKitListener.onException(error)
+        }
+    }
+
     companion object {
         const val ELLIPSOID_A = 6378137.0
         const val ELLIPSOID_EE = 0.00669342162296594323
         const val EARTH_R = 6372796.924
         const val UPDATE_INTERVAL: Long = 1000
         const val UPDATE_DISTANCE: Float = 1.0f
-        const val DEFAULT_PROVIDER = LocationManager.NETWORK_PROVIDER
         const val FIXED_PROVIDER = "fixed"
         const val DEFAULT_LONGITUDE = 108.947031
         const val DEFAULT_LATITUDE = 34.259441
@@ -333,6 +428,28 @@ class LocationKit(
             newLocation.latitude = fixedLat
             newLocation.longitude = fixedLng
             return newLocation
+        }
+
+        /**
+         * 显示请求权限对话框
+         *
+         * @param [activity] MainActivity
+         *
+         * @author lucka-me
+         * @since 0.3.8
+         */
+        fun showRequestPermissionDialog(activity: MainActivity) {
+            DialogKit.showDialog(
+                activity,
+                R.string.permission_request_title,
+                R.string.permission_explain_location,
+                positiveButtonTextId = R.string.confirm,
+                negativeButtonTextId = R.string.permission_system_settings,
+                negativeButtonListener = { _, _ ->
+                    activity.startActivity(Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS))
+                },
+                cancelable = false
+            )
         }
     }
 }
