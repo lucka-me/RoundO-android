@@ -17,7 +17,9 @@ import java.util.*
  * - [dashboardView]
  *
  * ## 方法列表
- * - [show]
+ * - [showWhenMissionStarted]
+ * - [showWhenMissionStopped]
+ * - [showWhenMissionCleared]
  * - [update]
  * - [initDashboard]
  * - [isDashboardShown]
@@ -37,7 +39,7 @@ class Dashboard(private val context: Context, private val missionManager: Missio
     private var dashboardView = View.inflate(context, R.layout.dialog_dashboard, null)
 
     /**
-     * 打开仪表盘对话框，若任务开始则显示仪表盘，否则显示未开始任务。
+     * 打开仪表盘对话框，显示进行中任务情况，并提供停止按钮。
      *
      * ## Changelog
      * ### 0.2.1
@@ -48,7 +50,7 @@ class Dashboard(private val context: Context, private val missionManager: Missio
      * @author lucka-me
      * @since 0.1.14
      */
-    fun show(activity: MainActivity) {
+    fun showWhenMissionStarted() {
 
         if (isDashboardShown()) return
 
@@ -59,55 +61,109 @@ class Dashboard(private val context: Context, private val missionManager: Missio
             .setTitle(if (isDash) R.string.dashboard_title_ee else R.string.dashboard_title)
             .setIcon(if (isDash) R.drawable.ic_dash else R.drawable.ic_dashboard)
             .setPositiveButton(R.string.confirm, null)
-        val dashboard = if (missionManager.state == MissionManager.MissionState.Started) {
 
-            initDashboard()
-            var checkedCount = 0
-            for (waypoint in missionManager.checkPointList) if (waypoint.checked) checkedCount++
-            update(checkedCount, true)
+        initDashboard()
+        var checkedCount = 0
+        for (waypoint in missionManager.checkPointList) if (waypoint.checked) checkedCount++
+        update(checkedCount, true)
 
-            dialogBuilder
-                .setView(dashboardView)
-                .setNegativeButton(R.string.dashboard_stop) { _, _ ->
-                    DialogKit.showDialog(
-                        context,
-                        R.string.alert_title, R.string.mission_stop_confirm_message,
-                        R.string.confirm,
-                        positiveButtonListener = { _, _ ->
-                            missionManager.stop()
-                        },
-                        negativeButtonTextId = R.string.cancel,
-                        cancelable = false
-                    )
-                }
-                .setOnDismissListener {
-                    quitDashboardParent()
-                }
-                .show()
+        val dashboard = dialogBuilder
+            .setView(dashboardView)
+            .setNegativeButton(R.string.dashboard_stop) { _, _ ->
+                DialogKit.showDialog(
+                    context,
+                    R.string.alert_title, R.string.mission_stop_confirm_message,
+                    R.string.confirm,
+                    positiveButtonListener = { _, _ ->
+                        missionManager.stop()
+                    },
+                    negativeButtonTextId = R.string.cancel,
+                    cancelable = false
+                )
+            }
+            .setOnDismissListener {
+                quitDashboardParent()
+            }
+            .show()
 
-        } else {
+        setDialogStyle(dashboard)
+    }
 
-            dialogBuilder
-                .setMessage(R.string.dashboard_mission_stopped)
-                .setNegativeButton(R.string.dashboard_start) { dialog, _ ->
-                    dialog.dismiss()
-                    quitDashboardParent()
-                    val intent = Intent(activity, SetupActivity::class.java)
-                    activity.startActivityForResult(intent, MainActivity.AppRequest.ActivitySetup.code)
-                    activity.overridePendingTransition(R.anim.slide_bottom_up, R.anim.slide_bottom_down)
-                }
-                .show()
+    /**
+     * 打开仪表盘对话框，显示已停止任务的情况，并提供清空按钮。
+     *
+     * @param [mapKit] 地图控制器，用于设置清空按钮的功能
+     *
+     * @author lucka-me
+     * @since 0.3.9
+     */
+    fun showWhenMissionStopped(mapKit: MapKit) {
 
-        }
+        if (isDashboardShown()) return
 
-        // Set dialog style
+        val isDash = PreferenceManager
+            .getDefaultSharedPreferences(context)
+            .getBoolean(context.getString(R.string.pref_dash_enable_key), false)
+        val dialogBuilder = AlertDialog.Builder(context)
+            .setTitle(if (isDash) R.string.dashboard_title_ee else R.string.dashboard_title)
+            .setIcon(if (isDash) R.drawable.ic_dash else R.drawable.ic_dashboard)
+            .setPositiveButton(R.string.confirm, null)
 
-        dashboard
-            .getButton(AlertDialog.BUTTON_POSITIVE)
-            .setTextColor(ContextCompat.getColor(context, R.color.colorPrimary))
-        dashboard
-            .getButton(AlertDialog.BUTTON_NEGATIVE)
-            .setTextColor(ContextCompat.getColor(context, R.color.colorPrimary))
+        initDashboard()
+        var checkedCount = 0
+        for (waypoint in missionManager.checkPointList) if (waypoint.checked) checkedCount++
+        update(checkedCount, true)
+
+        val dashboard = dialogBuilder
+            .setView(dashboardView)
+            .setNegativeButton(R.string.dashboard_clear) { _, _ ->
+                missionManager.clear()
+                mapKit.removeTrackPolyline()
+                mapKit.clearMarkers()
+            }
+            .setOnDismissListener {
+                quitDashboardParent()
+            }
+            .show()
+
+        setDialogStyle(dashboard)
+
+    }
+
+    /**
+     * 打开仪表盘对话框，显示任务未开始，并提供开始按钮。
+     *
+     * @param [activity] [MainActivity]，用于设置开始按钮功能
+     *
+     * @author lucka-me
+     * @since 0.3.9
+     */
+    fun showWhenMissionCleared(activity: MainActivity) {
+
+        if (isDashboardShown()) return
+
+        val isDash = PreferenceManager
+            .getDefaultSharedPreferences(context)
+            .getBoolean(context.getString(R.string.pref_dash_enable_key), false)
+        val dialogBuilder = AlertDialog.Builder(context)
+            .setTitle(if (isDash) R.string.dashboard_title_ee else R.string.dashboard_title)
+            .setIcon(if (isDash) R.drawable.ic_dash else R.drawable.ic_dashboard)
+            .setPositiveButton(R.string.confirm, null)
+
+        val dashboard = dialogBuilder
+            .setMessage(R.string.dashboard_mission_stopped)
+            .setNegativeButton(R.string.dashboard_start) { dialog, _ ->
+                dialog.dismiss()
+                quitDashboardParent()
+                val intent = Intent(activity, SetupActivity::class.java)
+                activity.startActivityForResult(intent, MainActivity.AppRequest.ActivitySetup.code)
+                activity.overridePendingTransition(R.anim.slide_bottom_up, R.anim.slide_bottom_down)
+            }
+            .show()
+
+        setDialogStyle(dashboard)
+
+
     }
 
     /**
@@ -165,6 +221,12 @@ class Dashboard(private val context: Context, private val missionManager: Missio
             )
         }
 
+        // Speed
+        dashboardView.speedText.text = String.format(
+            context.getString(R.string.dashboard_speed_text),
+            3.6 * missionManager.data.distance / missionManager.data.pastTime
+        )
+
     }
 
     /**
@@ -216,6 +278,15 @@ class Dashboard(private val context: Context, private val missionManager: Missio
     private fun quitDashboardParent() {
         if (isDashboardShown())
             (dashboardView.parent as ViewGroup).removeView(dashboardView)
+    }
+
+    private fun setDialogStyle(dialog: AlertDialog) {
+        dialog
+            .getButton(AlertDialog.BUTTON_POSITIVE)
+            ?.setTextColor(ContextCompat.getColor(context, R.color.colorPrimary))
+        dialog
+            .getButton(AlertDialog.BUTTON_NEGATIVE)
+            ?.setTextColor(ContextCompat.getColor(context, R.color.colorPrimary))
     }
 
     /**

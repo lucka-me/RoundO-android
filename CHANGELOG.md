@@ -1,6 +1,15 @@
 <h1 align=center>更新日志</h1>
 
 ```markdown
+## [0.3.9] - 2018-08-28
+- 0.3.8(847) -> 0.3.9(857)
+- Dashboard updated
+
+### Finished
+- Show Dashboard with clear button after mission stopped
+```
+
+```markdown
 ## [0.3.8] - 2018-08-27
 - 0.3.7(818) -> 0.3.8(847)
 
@@ -11,8 +20,8 @@
 
 ```markdown
 ## [0.3.7] - 2018-08-25
-- Adapted for Android O
 - 0.3.6(783) -> 0.3.7(818)
+- Adapted for Android O
 
 ### Fixed
 - In Android O, app crashes when open the Background Limitation Explanation

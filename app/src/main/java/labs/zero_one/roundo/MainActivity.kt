@@ -139,7 +139,7 @@ class MainActivity : AppCompatActivity() {
                         this@MainActivity, R.string.mission_resumed, Toast.LENGTH_LONG
                     ).show()
                 } else {
-                    dashboard.show(this@MainActivity)
+                    dashboard.showWhenMissionStarted()
                 }
                 // Update location
                 if (locationKit.isLocationAvailable)
@@ -151,11 +151,7 @@ class MainActivity : AppCompatActivity() {
                 mapKit.drawTrack(missionManager.trackPointList)
                 progressBar.visibility = View.INVISIBLE
 
-                val alert = AlertDialog.Builder(this@MainActivity)
-                alert.setTitle("结束")
-                alert.setCancelable(false)
-                alert.setPositiveButton(getString(R.string.confirm), null)
-                alert.show()
+                dashboard.showWhenMissionStopped(mapKit)
             }
 
             override fun onStartFailed(error: Exception) {
@@ -190,7 +186,7 @@ class MainActivity : AppCompatActivity() {
                     R.string.confirm,
                     negativeButtonTextId = R.string.dashboard_title,
                     negativeButtonListener = { _, _ ->
-                        dashboard.show(this@MainActivity)
+                        dashboard.showWhenMissionStarted()
                     },
                     icon = icon
                 )
@@ -206,7 +202,7 @@ class MainActivity : AppCompatActivity() {
                     R.string.mission_all_checked_message,
                     R.string.dashboard_title,
                     positiveButtonListener = { _, _ ->
-                        dashboard.show(this@MainActivity)
+                        dashboard.showWhenMissionStarted()
                     },
                     icon = getDrawable(R.drawable.ic_mission_all_checked)
                 )
@@ -299,9 +295,19 @@ class MainActivity : AppCompatActivity() {
         }
         buttonDashboard.setOnClickListener {
             when(missionManager.state) {
-                MissionManager.MissionState.Started, MissionManager.MissionState.Stopped -> {
-                    dashboard.show(this)
+
+                MissionManager.MissionState.Started -> {
+                    dashboard.showWhenMissionStarted()
                 }
+
+                MissionManager.MissionState.Stopped -> {
+                    if (missionManager.checkPointList.isNotEmpty()) {
+                        dashboard.showWhenMissionStopped(mapKit)
+                    } else {
+                        dashboard.showWhenMissionCleared(this)
+                    }
+                }
+
                 else -> {
 
                 }

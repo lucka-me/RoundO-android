@@ -301,6 +301,19 @@ class MissionManager(private var context: Context, private val missionListener: 
     }
 
     /**
+     * 清空任务
+     *
+     * @author lucka-me
+     * @since 0.3.9
+     */
+    fun clear() {
+        state = MissionState.Stopped
+        data = MissionData()
+        checkPointList.clear()
+        trackPointList.clear()
+    }
+
+    /**
      * 暂停任务
      *
      * @author lucka-me
@@ -383,6 +396,7 @@ class MissionManager(private var context: Context, private val missionListener: 
      * @since 0.1.10
      */
     fun reach(location: Location) {
+        if (location.accuracy > ACCURACY) return
         if (state != MissionState.Started) return
         data.distance += processCORC(location, trackPointList)
         doAsync {
@@ -503,6 +517,7 @@ class MissionManager(private var context: Context, private val missionListener: 
     }
 
     companion object {
+        const val ACCURACY = 20.0
         /**
          * 进行轨迹处理，包括简单预处理（距离判断）和累积偏移算法（CORC）
          *
@@ -574,7 +589,7 @@ class MissionManager(private var context: Context, private val missionListener: 
             // CORC 累计偏移限差阈值
             val thresholdT = 20
             if (d >= thresholdT) {
-                Log.i("TEST RO", "CORC 保留第 " + (size - 2) + " 个点，距离：" + distanceB)
+                Log.i("TESTRO", "CORC 保留第 " + (size - 2) + " 个点，距离：" + distanceB)
                 return distanceB
             }
             // 倒数第二个为冗余点

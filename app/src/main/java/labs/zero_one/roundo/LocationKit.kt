@@ -92,6 +92,7 @@ class LocationKit(
                 return
             }
             lastLocation = fixCoordinate(location)
+            Log.i("TESTRO", "精度：" + lastLocation.accuracy)
             isLocationAvailable = true
             locationKitListener.onLocationUpdated(lastLocation)
         }

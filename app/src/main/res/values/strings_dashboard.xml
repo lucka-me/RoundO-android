@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="dashboard_title">仪表盘</string>
+    <string name="dashboard_title_ee">Dashboard</string>
+    <string name="dashboard_start">开始</string>
+    <string name="dashboard_stop">结束</string>
+    <string name="dashboard_clear">清空</string>
+    <string name="dashboard_mission_stopped">未开始任务。</string>
+    <string name="dashboard_mission_progress_title">任务进度</string>
+    <string name="dashboard_mission_progress_text">%d / %d</string>
+    <string name="dashboard_mission_sequential_title_true">顺序任务</string>
+    <string name="dashboard_mission_sequential_title_false">非顺序任务</string>
+    <string name="dashboard_mission_sequential_text_true">前往指定任务点签到</string>
+    <string name="dashboard_mission_sequential_text_false">自由签到</string>
+    <string name="dashboard_time_title">时间</string>
+    <string name="dashboard_time_progress_text">%s / %s</string>
+    <string name="dashboard_time_target_title">总时间</string>
+    <string name="dashboard_time_start_title">开始</string>
+    <string name="dashboard_time_past_title">总耗时</string>
+    <string name="dashboard_distance_title">距离</string>
+    <string name="dashboard_distance_text_m">%3.2f 米</string>
+    <string name="dashboard_distance_text_km">%3.2f 千米</string>
+    <string name="dashboard_speed_title">速度</string>
+    <string name="dashboard_speed_text">%.2f km/h</string>
+</resources>

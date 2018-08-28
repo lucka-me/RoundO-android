@@ -73,6 +73,7 @@ class BackgroundMissionService : Service() {
     private val locationKitListener: LocationKit.LocationKitListener =
         object : LocationKit.LocationKitListener {
             override fun onLocationUpdated(location: Location) {
+                if (location.accuracy > MissionManager.ACCURACY) return
                 MissionManager.processCORC(location, trackPointList)
 
                 val newCheckedIndexList: ArrayList<Int> = ArrayList(0)

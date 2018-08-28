@@ -21,26 +21,6 @@
     <string name="mission_all_checked_title">全部完成</string>
     <string name="mission_all_checked_message">恭喜您，请打开仪表盘以结束任务。</string>
     <string name="mission_stop_confirm_message">确认要结束吗？</string>
-    <!-- Dashboard Dialog -->
-    <string name="dashboard_title">仪表盘</string>
-    <string name="dashboard_title_ee">Dashboard</string>
-    <string name="dashboard_start">开始</string>
-    <string name="dashboard_stop">结束</string>
-    <string name="dashboard_mission_stopped">未开始任务。</string>
-    <string name="dashboard_mission_progress_title">任务进度</string>
-    <string name="dashboard_mission_progress_text">%d / %d</string>
-    <string name="dashboard_mission_sequential_title_true">顺序任务</string>
-    <string name="dashboard_mission_sequential_title_false">非顺序任务</string>
-    <string name="dashboard_mission_sequential_text_true">前往指定任务点签到</string>
-    <string name="dashboard_mission_sequential_text_false">自由签到</string>
-    <string name="dashboard_time_title">时间</string>
-    <string name="dashboard_time_progress_text">%s / %s</string>
-    <string name="dashboard_time_target_title">总时间</string>
-    <string name="dashboard_time_start_title">开始</string>
-    <string name="dashboard_time_past_title">总耗时</string>
-    <string name="dashboard_distance_title">距离</string>
-    <string name="dashboard_distance_text_m">%3.2f 米</string>
-    <string name="dashboard_distance_text_km">%3.2f 千米</string>
 
     <!-- Permission -->
     <string name="permission_request_title">请求权限</string>

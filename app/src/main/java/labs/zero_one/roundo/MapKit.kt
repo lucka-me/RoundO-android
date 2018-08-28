@@ -139,7 +139,7 @@ class MapKit(private val context: Context) {
      * @author lucka-me
      * @since 0.1.11
      */
-    fun addOnMapInitialized(callback: (MineMap) -> Unit): Int {
+    private fun addOnMapInitialized(callback: (MineMap) -> Unit): Int {
         return if (!isMapInitialized) {
             onMapInitializedList.add(callback)
             onMapInitializedList.size - 1
