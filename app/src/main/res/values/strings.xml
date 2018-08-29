@@ -5,6 +5,7 @@
     <string name="mission_temp_file">Mission.data</string>
     <string name="format_time">%02d:%02d</string>
     <string name="format_time_sec">%02d:%02d:%02d</string>
+    <string name="map_style">http://minedata.cn/service/solu/style/id/4810</string>
 
     <!-- Main Menu -->
     <string name="menu_main_preference">设置</string>

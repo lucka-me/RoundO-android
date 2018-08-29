@@ -1,6 +1,15 @@
 <h1 align=center>更新日志</h1>
 
 ```markdown
+## [0.3.11] - 2018-08-29
+- 0.3.10(905) -> 0.3.11(920)
+- Feature: Customize Center
+
+### Finished
+- Customize mission center in SetupActivity
+```
+
+```markdown
 ## [0.3.10] - 2018-08-29
 - 0.3.9(857) -> 0.3.10(905)
 - Bugs fixed

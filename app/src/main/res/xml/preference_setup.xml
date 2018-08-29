@@ -46,6 +46,18 @@
             android:defaultValue="0"
             android:inputType="number" />
 
+        <SwitchPreference
+            android:key="@string/setup_advanced_center_customize_key"
+            android:title="@string/setup_advanced_center_customize_title"
+            android:summary="@string/setup_advanced_center_customize_summary_false"
+            android:defaultValue="false" />
+
+        <Preference
+            android:key="@string/setup_advanced_center_pick_key"
+            android:title="@string/setup_advanced_center_pick_title"
+            android:summary="@string/setup_advanced_center_pick_summary"
+            android:defaultValue="false" />
+
     </PreferenceCategory>
 
 </android.support.v7.preference.PreferenceScreen>

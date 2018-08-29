@@ -1,12 +1,19 @@
 package labs.zero_one.roundo
 
 import android.app.Activity
+import android.app.AlertDialog
 import android.content.SharedPreferences
 import android.os.Bundle
 import android.support.v7.app.AppCompatActivity
+import android.support.v7.preference.Preference
 import android.view.Menu
 import android.view.MenuItem
+import android.view.View
+import com.minemap.minemapsdk.MinemapAccountManager
+import com.minemap.minemapsdk.camera.CameraPosition
+import com.minemap.minemapsdk.geometry.LatLng
 import com.takisoft.fix.support.v7.preference.PreferenceFragmentCompat
+import kotlinx.android.synthetic.main.dialog_center_picker.view.*
 import org.jetbrains.anko.support.v4.defaultSharedPreferences
 
 /**
@@ -38,6 +45,7 @@ class SetupActivity : AppCompatActivity() {
      * - [onDestroy]
      *
      * ## 自定义方法列表
+     * - [getNewSummary]
      * - [resetValue]
      * - [warnIllegalValue]
      *
@@ -54,21 +62,87 @@ class SetupActivity : AppCompatActivity() {
             // Set the summaries
             // Basic - Sequential
             findPreference(getString(R.string.setup_basic_sequential_key)).summary =
-                if (defaultSharedPreferences.getBoolean(
-                        getString(R.string.setup_basic_sequential_key), false
-                    ))
-                    getString(R.string.setup_basic_sequential_summary_true)
-                else
-                    getString(R.string.setup_basic_sequential_summary_false)
+                getNewSummary(R.string.setup_basic_sequential_key)
+
             // Advanced - Seed
             findPreference(getString(R.string.setup_advanced_seed_key)).summary =
-                if (defaultSharedPreferences
-                        .getString(getString(R.string.setup_advanced_seed_key), "0").toLong() == 0L
-                )
-                    getString(R.string.setup_advanced_seed_summary_default)
-                else
-                    getString(R.string.setup_advanced_seed_summary_set)
+                getNewSummary(R.string.setup_advanced_seed_key)
             defaultSharedPreferences.registerOnSharedPreferenceChangeListener(this)
+
+            // Advanced - Center Customize
+            findPreference(getString(R.string.setup_advanced_center_customize_key)).summary =
+                getNewSummary(R.string.setup_advanced_center_customize_key)
+
+            // Advanced - Center Pick
+            findPreference(getString(R.string.setup_advanced_center_pick_key)).isEnabled =
+                defaultSharedPreferences.getBoolean(
+                    getString(R.string.setup_advanced_center_customize_key),
+                    false
+                )
+            findPreference(getString(R.string.setup_advanced_center_pick_key))
+                .onPreferenceClickListener = Preference.OnPreferenceClickListener { _ ->
+                // Show the pick dialog
+                val dialogLayout =
+                    View.inflate(requireContext(), R.layout.dialog_center_picker, null)
+                val centerPickerDialog = AlertDialog.Builder(requireContext())
+                    .setTitle(R.string.setup_advanced_center_pick_title)
+                    .setView(dialogLayout)
+                    .setCancelable(false)
+                    .setPositiveButton(R.string.confirm, null)
+                    .setNegativeButton(R.string.cancel, null)
+                    .show()
+                centerPickerDialog.getButton(AlertDialog.BUTTON_POSITIVE).isEnabled = false
+                MinemapAccountManager.getInstance(
+                    requireContext(),
+                    getString(R.string.minemap_token),
+                    "4810"
+                )
+                dialogLayout.mapView.onCreate(savedInstanceState)
+                dialogLayout.mapView.getMapAsync { mineMap ->
+                    if (mineMap == null) {
+                        DialogKit.showSimpleAlert(
+                            requireContext(),
+                            getString(R.string.err_map_init_failed)
+                        )
+                        return@getMapAsync
+                    }
+                    mineMap.setStyleUrl(getString(R.string.map_style))
+                    mineMap.setMaxZoomPreference(17.0)
+                    mineMap.setMinZoomPreference(3.0)
+                    val centerLng = defaultSharedPreferences.getFloat(
+                        getString(R.string.setup_advanced_center_pick_longitude_key),
+                        LocationKit.DEFAULT_LONGITUDE.toFloat()
+                    )
+                    val centerLat = defaultSharedPreferences.getFloat(
+                        getString(R.string.setup_advanced_center_pick_latitude_key),
+                        LocationKit.DEFAULT_LATITUDE.toFloat()
+                    )
+                    mineMap.cameraPosition =
+                        CameraPosition.Builder()
+                            .target(LatLng(centerLat.toDouble(), centerLng.toDouble()))
+                            .zoom(16.0)
+                            .build()
+                    centerPickerDialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener {
+                        val newCenter = mineMap.cameraPosition.target
+                        defaultSharedPreferences
+                            .edit()
+                            .putFloat(
+                                getString(R.string.setup_advanced_center_pick_longitude_key),
+                                newCenter.longitude.toFloat()
+                            )
+                            .apply()
+                        defaultSharedPreferences
+                            .edit()
+                            .putFloat(
+                                getString(R.string.setup_advanced_center_pick_latitude_key),
+                                newCenter.latitude.toFloat())
+                            .apply()
+                        centerPickerDialog.dismiss()
+                    }
+                    centerPickerDialog.getButton(AlertDialog.BUTTON_POSITIVE).isEnabled = true
+                }
+                true
+            }
         }
 
         override fun onDestroy() {
@@ -84,9 +158,9 @@ class SetupActivity : AppCompatActivity() {
             when (key) {
 
                 getString(R.string.setup_basic_radius_key) -> {
-                    if (sharedPreferences.getString(
-                            key, getString(R.string.setup_basic_radius_default)
-                        ).toDouble() < 0.1
+                    if (defaultSharedPreferences
+                            .getString(key, getString(R.string.setup_basic_radius_default))
+                            .toDouble() < 0.1
                     ) {
                         resetValue(key, getString(R.string.setup_basic_radius_default))
                         warnIllegalValue(R.string.setup_basic_radius_warning)
@@ -94,9 +168,11 @@ class SetupActivity : AppCompatActivity() {
                 }
 
                 getString(R.string.setup_basic_checkpoint_count_key) -> {
-                    if (sharedPreferences.getString(
-                            key, getString(R.string.setup_basic_checkpoint_count_default)
-                        ).toInt() < 1
+                    if (defaultSharedPreferences
+                            .getString(
+                                key, getString(R.string.setup_basic_checkpoint_count_default)
+                            )
+                            .toInt() < 1
                     ) {
                         resetValue(key, getString(R.string.setup_basic_checkpoint_count_default))
                         warnIllegalValue(R.string.setup_basic_checkpoint_count_warning)
@@ -104,23 +180,64 @@ class SetupActivity : AppCompatActivity() {
                 }
 
                 getString(R.string.setup_basic_sequential_key) -> {
-                    findPreference(key).summary =
-                        if (sharedPreferences.getBoolean(key, false))
-                            getString(R.string.setup_basic_sequential_summary_true)
-                        else
-                            getString(R.string.setup_basic_sequential_summary_false)
+                    findPreference(key).summary = getNewSummary(R.string.setup_basic_sequential_key)
                 }
 
                 getString(R.string.setup_advanced_seed_key) -> {
-                    findPreference(getString(R.string.setup_advanced_seed_key)).summary =
-                        if (defaultSharedPreferences
-                                .getString(getString(R.string.setup_advanced_seed_key), "0")
-                                .toLong() == 0L
-                        )
-                            getString(R.string.setup_advanced_seed_summary_default)
-                        else
-                            getString(R.string.setup_advanced_seed_summary_set)
+                    findPreference(key).summary = getNewSummary(R.string.setup_advanced_seed_key)
                 }
+
+                getString(R.string.setup_advanced_center_customize_key) -> {
+                    findPreference(key).summary =
+                        getNewSummary(R.string.setup_advanced_center_customize_key)
+                    findPreference(getString(R.string.setup_advanced_center_pick_key)).isEnabled =
+                        defaultSharedPreferences.getBoolean(
+                            getString(R.string.setup_advanced_center_customize_key),
+                            false
+                        )
+                }
+            }
+        }
+
+        /**
+         * 生成新简介
+         *
+         * @author lucka-me
+         * @since 0.3.11
+         */
+        private fun getNewSummary(keyId: Int): String {
+            return when(keyId) {
+
+                R.string.setup_basic_sequential_key -> {
+                    if (defaultSharedPreferences.getBoolean(getString(keyId), false))
+                        getString(R.string.setup_basic_sequential_summary_true)
+                    else
+                        getString(R.string.setup_basic_sequential_summary_false)
+                }
+
+                R.string.setup_advanced_seed_key -> {
+                    if (defaultSharedPreferences
+                            .getString(
+                                getString(keyId),
+                                getString(R.string.setup_advanced_seed_default)
+                            )
+                            .toLong() == 0L
+                    ) {
+                        getString(R.string.setup_advanced_seed_summary_default)
+                    } else {
+                        getString(R.string.setup_advanced_seed_summary_set)
+                    }
+                }
+
+                R.string.setup_advanced_center_customize_key -> {
+                    if (defaultSharedPreferences.getBoolean(getString(keyId), false)) {
+                        getString(R.string.setup_advanced_center_customize_summary_true)
+                    } else {
+                        getString(R.string.setup_advanced_center_customize_summary_false)
+                    }
+                }
+
+                else -> ""
             }
         }
 

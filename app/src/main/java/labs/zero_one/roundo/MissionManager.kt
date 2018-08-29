@@ -227,24 +227,28 @@ class MissionManager(private var context: Context, private val missionListener: 
 
         doAsync {
 
-            data = MissionData(center = GeoPoint(centerLocation))
+            data = MissionData()
 
             val sharedPreferences: SharedPreferences
             val waypointCount: Int
+            val isCenterCustomized: Boolean
             try {
                 sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context)
+
                 data.radius = sharedPreferences
                     .getString(
                         context.getString(R.string.setup_basic_radius_key),
                         context.getString(R.string.setup_basic_radius_default)
                     )
                     .toDouble() * 1000 // km -> meter
+
                 waypointCount = sharedPreferences
                     .getString(
                         context.getString(R.string.setup_basic_checkpoint_count_key),
                         context.getString(R.string.setup_basic_checkpoint_count_default)
                     )
                     .toInt()
+
                 val cal = Calendar.getInstance()
                 cal.time = TimePickerPreference.FORMAT
                     .parse(sharedPreferences.getString(
@@ -252,11 +256,33 @@ class MissionManager(private var context: Context, private val missionListener: 
                         context.getString(R.string.setup_basic_time_default)))
                 data.targetTime =
                     cal.get(Calendar.HOUR_OF_DAY) * 3600 + cal.get(Calendar.MINUTE) * 60
+
                 data.sequential = sharedPreferences
                     .getBoolean(context.getString(R.string.setup_basic_sequential_key), false)
+
                 val prefSeed = sharedPreferences
                     .getString(context.getString(R.string.setup_advanced_seed_key), "0").toLong()
                 data.seed = if (prefSeed == 0L) data.startTime.time else prefSeed
+
+                isCenterCustomized = sharedPreferences.getBoolean(
+                    context.getString(R.string.setup_advanced_center_customize_key),
+                    false
+                )
+
+                data.center = if (isCenterCustomized) {
+                    val centerLng = sharedPreferences.getFloat(
+                        context.getString(R.string.setup_advanced_center_pick_longitude_key),
+                        LocationKit.DEFAULT_LONGITUDE.toFloat()
+                    ).toDouble()
+                    val centerLat = sharedPreferences.getFloat(
+                        context.getString(R.string.setup_advanced_center_pick_latitude_key),
+                        LocationKit.DEFAULT_LATITUDE.toFloat()
+                    ).toDouble()
+                    GeoPoint(centerLng, centerLat)
+                } else {
+                    GeoPoint(centerLocation)
+                }
+
             } catch (error: Exception) {
                 state = MissionState.Stopped
                 uiThread {
@@ -270,7 +296,7 @@ class MissionManager(private var context: Context, private val missionListener: 
             }
             trackPointList.clear()
             checkPointList =
-                generateCheckPointList(centerLocation, data.radius, waypointCount, data.seed)
+                generateCheckPointList(data.center.location, data.radius, waypointCount, data.seed)
             // Just for demo
             Thread.sleep(3000)
             state = MissionState.Started

@@ -29,6 +29,16 @@
     <string name="setup_advanced_seed_title">随机种子</string>
     <string name="setup_advanced_seed_summary_default">默认</string>
     <string name="setup_advanced_seed_summary_set">自定义</string>
+    <string name="setup_advanced_seed_default">0</string>
     <string name="setup_advanced_seed_message">输入一串数字作为生成签到点的种子。\n0为使用时间作为种子</string>
+    <string name="setup_advanced_center_customize_key">setup_advanced_custom_center_switch</string>
+    <string name="setup_advanced_center_customize_title">自定任务中心</string>
+    <string name="setup_advanced_center_customize_summary_true">在“选择任务中心”选项中进行设置</string>
+    <string name="setup_advanced_center_customize_summary_false">使用当前位置作为任务中心</string>
+    <string name="setup_advanced_center_pick_key">setup_advanced_custom_center_pick</string>
+    <string name="setup_advanced_center_pick_longitude_key">setup_advanced_custom_center_pick_longitude</string>
+    <string name="setup_advanced_center_pick_latitude_key">setup_advanced_custom_center_pick_latitude</string>
+    <string name="setup_advanced_center_pick_title">选择任务中心</string>
+    <string name="setup_advanced_center_pick_summary">触摸以选择任务中心</string>
 
 </resources>

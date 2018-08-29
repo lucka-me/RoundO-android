@@ -107,7 +107,7 @@ class MapKit(private val context: Context) {
             if (newMap == null) throw Exception(context.getString(R.string.err_map_init_failed))
             mineMap = newMap
             isMapInitialized = true
-            mineMap.setStyleUrl("http://minedata.cn/service/solu/style/id/4810")
+            mineMap.setStyleUrl(context.getString(R.string.map_style))
             mineMap.uiSettings.isCompassEnabled = true
             mineMap.uiSettings.setCompassMargins(
                 mineMap.uiSettings.compassMarginLeft,
