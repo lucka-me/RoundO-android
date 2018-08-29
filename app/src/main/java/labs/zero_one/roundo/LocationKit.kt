@@ -11,7 +11,6 @@ import android.location.LocationManager
 import android.os.Bundle
 import android.provider.Settings
 import android.support.v4.app.ActivityCompat
-import android.util.Log
 import kotlin.math.*
 
 /**
@@ -92,14 +91,12 @@ class LocationKit(
                 return
             }
             lastLocation = fixCoordinate(location)
-            Log.i("TESTRO", "精度：" + lastLocation.accuracy)
             isLocationAvailable = true
             locationKitListener.onLocationUpdated(lastLocation)
         }
 
         override fun onProviderDisabled(provider: String?) {
 
-            Log.i("TESTRO", "定位不可用：" + provider)
             if (provider == currentProvider) {
                 val newProvider = locationManager.getBestProvider(criteria ,true)
                 if (newProvider != LocationManager.GPS_PROVIDER &&
@@ -112,7 +109,6 @@ class LocationKit(
                     stopUpdate()
                     startUpdate(false)
                     startUpdateAssist(oldProvider)
-                    Log.i("TESTRO", "切换至定位源：" + currentProvider)
                     locationKitListener.onProviderSwitchedTo(currentProvider)
                 }
             }
@@ -120,7 +116,6 @@ class LocationKit(
 
         override fun onProviderEnabled(provider: String?) {
 
-            Log.i("TESTRO", "定位源可用：" + provider)
             val newProvider = locationManager.getBestProvider(criteria ,true)
             if (newProvider != LocationManager.GPS_PROVIDER &&
                 newProvider != LocationManager.NETWORK_PROVIDER
@@ -131,7 +126,6 @@ class LocationKit(
                 currentProvider = newProvider
                 stopUpdate()
                 startUpdate(false)
-                Log.i("TESTRO", "切换至定位源：" + currentProvider)
                 locationKitListener.onProviderSwitchedTo(currentProvider)
             } else {
                 locationKitListener.onProviderEnabled()
@@ -146,7 +140,6 @@ class LocationKit(
 
     private val assistLocationListener = object : LocationListener {
         override fun onProviderEnabled(provider: String?) {
-            Log.i("TESTRO", "检测定位源可用：" + provider)
             locationListener.onProviderEnabled(provider)
             locationManager.removeUpdates(this)
         }
@@ -236,7 +229,6 @@ class LocationKit(
             } else {
                 lastLocation = fixCoordinate(location)
                 isLocationAvailable = true
-                locationListener.onLocationChanged(lastLocation)
             }
         } else {
             lastLocation.longitude = DEFAULT_LONGITUDE
@@ -358,7 +350,7 @@ class LocationKit(
         const val ELLIPSOID_EE = 0.00669342162296594323
         const val EARTH_R = 6372796.924
         const val UPDATE_INTERVAL: Long = 1000
-        const val UPDATE_DISTANCE: Float = 1.0f
+        const val UPDATE_DISTANCE: Float = 2.0f
         const val FIXED_PROVIDER = "fixed"
         const val DEFAULT_LONGITUDE = 108.947031
         const val DEFAULT_LATITUDE = 34.259441

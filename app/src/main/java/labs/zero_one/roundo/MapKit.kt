@@ -351,4 +351,16 @@ class MapKit(private val context: Context) {
             addOnMapInitialized { removeTrackPolyline() }
         }
     }
+
+    /**
+     * 是否有标记在显示
+     *
+     * @return 结果
+     *
+     * @author lucka-me
+     * @since 0.3.10
+     */
+    fun isMarkersDisplaying(): Boolean {
+        return markerList.isNotEmpty()
+    }
 }

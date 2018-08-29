@@ -1,7 +1,6 @@
 package labs.zero_one.roundo
 
 import android.app.Activity
-import android.app.AlertDialog
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.location.Location
@@ -11,6 +10,7 @@ import android.provider.Settings
 import android.support.v4.content.ContextCompat
 import android.support.v4.graphics.drawable.DrawableCompat
 import android.support.v7.app.AppCompatActivity
+import android.util.Log
 import android.view.View
 import android.widget.Toast
 import kotlinx.android.synthetic.main.activity_main.*
@@ -141,9 +141,6 @@ class MainActivity : AppCompatActivity() {
                 } else {
                     dashboard.showWhenMissionStarted()
                 }
-                // Update location
-                if (locationKit.isLocationAvailable)
-                    missionManager.reach(locationKit.lastLocation)
 
             }
 
@@ -257,10 +254,16 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
+        // Stop the service
+        val backgroundMissionService =
+            Intent(this, BackgroundMissionService::class.java)
+        stopService(backgroundMissionService)
+
+
         // Initialize Dashboard
         dashboard = Dashboard(this, missionManager)
 
-        // Handle the permissions
+        // Handle the location and permissions
         locationKit = LocationKit(this, locationKitListener)
         if (locationKit.requestPermission(this, AppRequest.PermissionLocation.code)) {
             LocationKit.showRequestPermissionDialog(this)
@@ -301,7 +304,7 @@ class MainActivity : AppCompatActivity() {
                 }
 
                 MissionManager.MissionState.Stopped -> {
-                    if (missionManager.checkPointList.isNotEmpty()) {
+                    if (mapKit.isMarkersDisplaying()) {
                         dashboard.showWhenMissionStopped(mapKit)
                     } else {
                         dashboard.showWhenMissionCleared(this)
@@ -337,6 +340,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     override fun onPause() {
+        Log.i("TESTRO MA", "onPause()")
         locationKit.stopUpdate()
         missionManager.pause()
         if (missionManager.state == MissionManager.MissionState.Paused) {
@@ -354,11 +358,16 @@ class MainActivity : AppCompatActivity() {
     }
 
     override fun onResume() {
+        Log.i("TESTRO MA", "onResume()")
         if (missionManager.state == MissionManager.MissionState.Paused) {
             // Stop the background service
             val backgroundMissionService =
                 Intent(this, BackgroundMissionService::class.java)
-            stopService(backgroundMissionService)
+            if(stopService(backgroundMissionService)) {
+
+            } else {
+                Log.i("TESTRO MA", "没找到后台服务")
+            }
 
             missionManager.resume()
         }
@@ -366,8 +375,16 @@ class MainActivity : AppCompatActivity() {
         super.onResume()
     }
 
+    override fun onDestroy() {
+        Log.i("TESTRO MA", "onDestroy()")
+        super.onDestroy()
+    }
+
     override fun onBackPressed() {
+        Log.i("TESTRO MA", "按下后退键")
+        super.onBackPressed()
         // Alert user when mission is not stop because this will stop the app
+        /*
         if (missionManager.state != MissionManager.MissionState.Stopped) {
             DialogKit.showDialog(
                 this,
@@ -381,7 +398,7 @@ class MainActivity : AppCompatActivity() {
                 )
         } else {
             super.onBackPressed()
-        }
+        }*/
     }
 
     // Handle the activity result

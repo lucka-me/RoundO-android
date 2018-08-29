@@ -11,7 +11,6 @@ import android.os.Build
 import android.os.IBinder
 import android.provider.Settings
 import android.support.v4.app.NotificationCompat
-import android.util.Log
 import android.widget.Toast
 import org.jetbrains.anko.runOnUiThread
 import java.io.*
@@ -74,7 +73,7 @@ class BackgroundMissionService : Service() {
         object : LocationKit.LocationKitListener {
             override fun onLocationUpdated(location: Location) {
                 if (location.accuracy > MissionManager.ACCURACY) return
-                MissionManager.processCORC(location, trackPointList)
+                missionData.distance += MissionManager.processCORC(location, trackPointList)
 
                 val newCheckedIndexList: ArrayList<Int> = ArrayList(0)
                 var totalCheckedCount = 0
@@ -228,7 +227,6 @@ class BackgroundMissionService : Service() {
             override fun run() {
                 runOnUiThread {
                     saveMission()
-                    Log.i("TEST RO BKM", "时间更新")
                 }
             }
         }, 0, 5000)
@@ -242,12 +240,12 @@ class BackgroundMissionService : Service() {
 
     override fun onDestroy() {
 
+        stopForeground(true)
         notificationManager?.cancelAll()
         timer.cancel()
         timer.purge()
         timer = Timer(true)
         locationKit?.stopUpdate()
-        stopForeground(true)
 
         super.onDestroy()
 
@@ -282,7 +280,6 @@ class BackgroundMissionService : Service() {
             objectOutputStream.close()
             tempFileOutputStream.close()
         } catch (error: Exception) {
-            Log.i("TEST RO BKM", error.message)
             Toast.makeText(this, error.message, Toast.LENGTH_LONG).show()
         }
 

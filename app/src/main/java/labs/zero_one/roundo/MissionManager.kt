@@ -32,6 +32,7 @@ import kotlin.math.*
  * ## 方法列表
  * - [start]
  * - [stop]
+ * - [clear]
  * - [pause]
  * - [resume]
  * - [setupTimer]
@@ -67,6 +68,7 @@ class MissionManager(private var context: Context, private val missionListener: 
      * - [onStopped]
      * - [onStopFailed]
      * - [onChecked]
+     * - [onCheckedAll]
      * - [onTimeUpdated]
      * - [onSecondUpdated]
      *
@@ -396,8 +398,8 @@ class MissionManager(private var context: Context, private val missionListener: 
      * @since 0.1.10
      */
     fun reach(location: Location) {
-        if (location.accuracy > ACCURACY) return
         if (state != MissionState.Started) return
+        if (location.accuracy > ACCURACY) return
         data.distance += processCORC(location, trackPointList)
         doAsync {
             val newCheckedIndexList: ArrayList<Int> = ArrayList(0)
@@ -548,7 +550,7 @@ class MissionManager(private var context: Context, private val missionListener: 
             val distanceLast = trackPointList[size - 1].location
                 .distanceTo(trackPointList[size - 2].location).toDouble()
             if (distanceLast < 10.0) {
-                Log.i("TEST RO", "距离过短：" + (size - 2) + " -> " + (size - 1) + ": " + distanceLast)
+                Log.i("TESTRO MM", "距离过短：" + (size - 2) + " -> " + (size - 1) + ": " + distanceLast)
                 trackPointList.removeAt(size - 1)
                 return 0.0
             }
@@ -589,7 +591,7 @@ class MissionManager(private var context: Context, private val missionListener: 
             // CORC 累计偏移限差阈值
             val thresholdT = 20
             if (d >= thresholdT) {
-                Log.i("TESTRO", "CORC 保留第 " + (size - 2) + " 个点，距离：" + distanceB)
+                Log.i("TESTRO MM", "CORC 保留第 " + (size - 2) + " 个点，距离：" + distanceB)
                 return distanceB
             }
             // 倒数第二个为冗余点

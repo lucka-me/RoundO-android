@@ -1,6 +1,16 @@
 <h1 align=center>更新日志</h1>
 
 ```markdown
+## [0.3.10] - 2018-08-29
+- 0.3.9(857) -> 0.3.10(905)
+- Bugs fixed
+
+### Fixed
+- Background service won't stop if user exits app by pressing back button
+- When app back to foreground, the track may record a wrong place
+```
+
+```markdown
 ## [0.3.9] - 2018-08-28
 - 0.3.8(847) -> 0.3.9(857)
 - Dashboard updated
