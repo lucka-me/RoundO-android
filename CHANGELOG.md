@@ -1,6 +1,16 @@
 <h1 align=center>更新日志</h1>
 
 ```markdown
+## [0.3.13] - 2018-09-01
+- 0.3.12(928) -> 0.3.13(938)
+- UI improved
+
+### Changed
+- Preference FAB is at top-start now
+- Marker icons improved
+```
+
+```markdown
 ## [0.3.12] - 2018-09-01
 - 0.3.11(920) -> 0.3.12(928)
 - New marker: Final
