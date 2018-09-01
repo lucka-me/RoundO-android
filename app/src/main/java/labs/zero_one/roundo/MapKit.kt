@@ -77,7 +77,8 @@ class MapKit(private val context: Context) {
     enum class MarkerType(val iconIndex: Int) {
         Unchecked(0),
         Checked(1),
-        Next(2)
+        Next(2),
+        Final(3)
     }
     private lateinit var markerIconList: Array<Icon>
 
@@ -100,7 +101,8 @@ class MapKit(private val context: Context) {
         markerIconList = arrayOf(
             IconFactory.getInstance(context).fromResource(R.mipmap.ic_marker_unchecked),
             IconFactory.getInstance(context).fromResource(R.mipmap.ic_marker_checked),
-            IconFactory.getInstance(context).fromResource(R.mipmap.ic_marker_next)
+            IconFactory.getInstance(context).fromResource(R.mipmap.ic_marker_next),
+            IconFactory.getInstance(context).fromResource(R.mipmap.ic_marker_final)
         )
         mapView.onCreate(savedInstanceState)
         mapView.getMapAsync { newMap ->

@@ -8,62 +8,103 @@ import android.location.Criteria
 import android.location.Location
 import android.location.LocationListener
 import android.location.LocationManager
+import android.net.Uri
 import android.os.Bundle
 import android.provider.Settings
 import android.support.v4.app.ActivityCompat
 import kotlin.math.*
 
 /**
- * 位置工具，封装 LocationManager，简化相关接口和方法，并提供坐标系转换等特色功能，可以在 GPS 和网络定位间自动切换。
+ * ```
+ * MIT License
  *
- * ## Changelog
- * ### 0.3.8
- * - Switch between GPS and Network provider automatically
+ * Copyright (c) 2017-2018 Lucka
  *
- * ## 属性列表
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ * ```
+ *
+ * This class provides a simple way to get location updates in Android, it encapsulates the [LocationManager] and [LocationListener], provides simplified interface and useful methods.
+ *
+ * ## Usage
+ * - Create a new file and paste the code instead of adding the file to your project directly.
+ * - Follow the code analysis of IDE to edit, fix or remove the code.
+ * - The details of the methods are included in the code, documented in KDoc.
+ *
+ * ## Attributes
+ * ### Public
  * - [lastLocation]
  * - [isLocationAvailable]
+ * ### Private
  * - [locationManager]
  * - [currentProvider]
  * - [criteria]
  * - [locationListener]
  * - [assistLocationListener]
+ * ### Static
  * - [ELLIPSOID_A]
  * - [ELLIPSOID_EE]
  * - [EARTH_R]
+ * - [UPDATE_DISTANCE]
+ * - [UPDATE_INTERVAL]
  * - [FIXED_PROVIDER]
  * - [DEFAULT_LONGITUDE]
  * - [DEFAULT_LATITUDE]
  *
- * ## 子类列表
+ * ## Interface
  * - [locationKitListener]
  *
- * ## 方法列表
- * - [requestPermission]
+ * ## Methods
+ * ### Public
  * - [startUpdate]
  * - [stopUpdate]
+ * ### Private
+ * - [startUpdateAssist]
+ * ### Static
  * - [fixCoordinate]
+ * - [requestPermission]
  * - [showRequestPermissionDialog]
  *
- * @param [context] 环境
- * @param [locationKitListener] 消息监听器
+ * ## Changelog
+ * ### 0.1.0
+ * - Initial version
+ *
+ * @param [context] The context
+ * @param [locationKitListener] The interface, see [LocationKitListener]
  *
  * @author lucka-me
- * @since 0.1.4
+ * @since 0.1.0
  *
- * @property [lastLocation] 最新位置（已修正）
- * @property [isLocationAvailable] 位置是否可用
- * @property [locationManager] 原生定位管理器
- * @property [currentProvider] 最新的定位源
- * @property [criteria] 定位要求，用于获取最佳定位源
- * @property [locationListener] 原生定位消息监听器
- * @property [assistLocationListener] 辅助监听器，用于切换定位源之后监听原有定位源，当原有定位源可用时向 [locationListener] 发送消息
- * @property [ELLIPSOID_A] 椭球参数：长半轴（米）
- * @property [ELLIPSOID_EE] 椭球参数：扁率
- * @property [EARTH_R] 地球平均半径（米）
- * @property [FIXED_PROVIDER] 修正坐标后位置的 Provider
- * @property [DEFAULT_LONGITUDE] 默认经度
- * @property [DEFAULT_LATITUDE] 默认维度
+ * @property [lastLocation] The last location with fixed (GCJ-02) coordinates
+ * @property [isLocationAvailable] If the location is available
+ * @property [locationManager] The original [LocationManager]
+ * @property [currentProvider] The location provider in use
+ * @property [criteria] The requirement to get the best location provider
+ * @property [locationListener] The original [LocationListener]
+ * @property [assistLocationListener] Assistant [LocationListener], used to listen to the old provider when it's disabled and switched to another, and notify the [locationListener] when the old provider is enabled.
+ * @property [ELLIPSOID_A] Semi-major of the earth ellipsoid in meter
+ * @property [ELLIPSOID_EE] Flatness of the earth ellipsoid in meter
+ * @property [EARTH_R] Average radius of the earth
+ * @property [UPDATE_DISTANCE] Minimum distance between two location updates in meter
+ * @property [UPDATE_INTERVAL] Minimum time interval between two location updates in millisecond
+ * @property [FIXED_PROVIDER] The provider string to mark the fixed (GCJ-02) location
+ * @property [DEFAULT_LONGITUDE] Alternative longitude when failed to get the very first location (Center of Xi'an City)
+ * @property [DEFAULT_LATITUDE] Alternative latitude when failed to get the very first location (Center of Xi'an City)
  */
 class LocationKit(
     private var context: Context,
@@ -149,71 +190,66 @@ class LocationKit(
     }
 
     /**
-     * 位置工具消息监听器
+     * Interface used to receive notifications from [LocationKit]
      *
-     * ## 消息列表
+     * ## Public Methods
      * - [onLocationUpdated]
      * - [onProviderDisabled]
+     * - [onProviderEnabled]
      * - [onProviderSwitchedTo]
      * - [onException]
      *
-     * ## Changelog
-     * ### 0.1.5
-     * - Add [onException]
-     *
      * @author lucka-me
-     * @since 0.1.4
+     * @since 0.1.0
      */
     interface LocationKitListener {
         /**
-         * 位置更新
+         * Called when the location has updated.
+         *
+         * The [lastLocation] and [isLocationAvailable] will be also updated when this method is called
          *
          * @author lucka-me
-         * @since 0.1.4
+         * @since 0.1.0
          */
         fun onLocationUpdated(location: Location)
         /**
-         * 定位被关闭
+         * Called when both GPS Provider and Network Provider are disabled.
+         *
+         * Usually fired when user turn off the location from System Settings.
          *
          * @author lucka-me
-         * @since 0.1.4
+         * @since 0.1.0
          */
         fun onProviderDisabled()
         /**
-         * 定位开启
+         * Called when either GPS Provider or Network Provider is enabled.
+         *
+         * Usually fired when user turn on the location from System Settings.
          *
          * @author lucka-me
-         * @since 0.1.4
+         * @since 0.1.0
          */
         fun onProviderEnabled()
         /**
-         * 定位源被切换
+         * Called when location provider is switched automatically.
+         *
+         * @param [newProvider] The new provider in use
          *
          * @author lucka-me
-         * @since 0.3.8
+         * @since 0.1.0
          */
         fun onProviderSwitchedTo(newProvider: String)
         /**
-         * 返回错误
+         * Called when, and the resource id of error message:
+         * - A mock location is detected -> [R.string.err_location_mock]
+         * - Location permission is denied -> [R.string.err_location_permission_denied]
          *
          * @author lucka-me
-         * @since 0.1.5
+         * @since 0.1.0
          */
         fun onException(error: Exception)
     }
 
-
-    /**
-     * 初始化
-     *
-     * 设置初始坐标（西安）
-     *
-     * Note: 此处调用 getLastKnownLocation() 并修正坐标，会触发 onLocationChanged 并传入修正的坐标
-     *       可通过修改 Provider 进行标记
-     *
-     * @author lucka-me
-     * @since 0.1.5
-     */
     init {
         criteria.accuracy = Criteria.ACCURACY_FINE
         if (ActivityCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION) ==
@@ -238,50 +274,14 @@ class LocationKit(
     }
 
     /**
-     * 请求权限
+     * Start location updates, using [UPDATE_DISTANCE] and [UPDATE_INTERVAL].
      *
-     * ## Changelog
-     * ### 0.3.3
-     * - 返回是否需要显示请求权限对话框，由上层显示或做其他处理
-     * ### 0.3.7
+     * @param [resetProvider] If should get the best enabled provider first
      *
-     * @param [activity] 应用的 Activity
-     * @param [requestCode] 请求代码
-     *
-     * @return 是否需要显示请求权限对话框
+     * @return If the update is started successfully
      *
      * @author lucka-me
-     * @since 0.1.5
-     */
-    fun requestPermission(activity: MainActivity, requestCode: Int): Boolean {
-        if (ActivityCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION) !=
-            PackageManager.PERMISSION_GRANTED
-        ) {
-            // Explain if permission denied before
-            if (ActivityCompat.shouldShowRequestPermissionRationale(
-                    activity,
-                    Manifest.permission.ACCESS_FINE_LOCATION
-                )
-            ) {
-                return true
-            } else {
-                ActivityCompat.requestPermissions(
-                    activity,
-                    arrayOf(Manifest.permission.ACCESS_FINE_LOCATION),
-                    requestCode
-                )
-            }
-        }
-        return false
-    }
-
-    /**
-     * 开始定位
-     *
-     * @return 是否成功
-     *
-     * @author lucka-me
-     * @since 0.1.4
+     * @since 0.1.0
      */
     fun startUpdate(resetProvider: Boolean = true): Boolean {
         if (resetProvider) {
@@ -311,7 +311,7 @@ class LocationKit(
     }
 
     /**
-     * 停止定位
+     * Stop location updates.
      *
      * @author lucka-me
      * @since 0.1.4
@@ -321,12 +321,12 @@ class LocationKit(
     }
 
     /**
-     * 开始用辅助监听器 [assistLocationListener] 监听定位源
+     * Start to listen to the appointed provider with [assistLocationListener], which will notify the [locationListener] only when the provider is enabled.
      *
-     * @param [provider] 要监听的定位源
+     * @param [provider] The provider needs to be listened
      *
      * @author lucka-me
-     * @since 0.3.8
+     * @since 0.1.0
      */
     private fun startUpdateAssist(provider: String) {
         if (ActivityCompat
@@ -356,38 +356,25 @@ class LocationKit(
         const val DEFAULT_LATITUDE = 34.259441
 
         /**
-         * 将 WGS-84 坐标系转换为 GCJ-02 坐标系
+         * Convert (Fix) location from WGS-84 to GCJ-02.
          *
-         * ## Changelog
-         * ### 0.1.5
-         * - [Location] 改为非空类型
-         * ### 0.1.6
-         * - 参数 [location] 引用的对象也会被转换
-         * ### 0.1.7
-         * - [Math.PI] -> [PI]
-         * ### 0.1.10
-         * - 修正算法
-         * ### 0.3.1
-         * - 作为静态函数提供
-         * ### 0.3.2
-         * - 不再修正参数 [location] 引用的对象
-         * - 将修正的坐标 Provider 修改为 fixed 以供辨识，避免二次修正，同时在修正前进行辨识
+         * Note: The original method of the original method is licensed under MIT License, I have no idea what should I do here (put the license here or not) yet.
          *
-         * @param [location] 待转换的位置
+         * @param [location] Location to be fixed
          *
-         * @return 转换后的位置
+         * @return Fixed location
          *
-         * @see <a href="https://github.com/geosmart/coordtransform/blob/master/src/main/java/me/demo/util/geo/CoordinateTransformUtil.java">geosmart/coordtransform | Github</a>
+         * @see <a href="https://github.com/geosmart/coordtransform/blob/master/src/main/java/me/demo/util/geo/CoordinateTransformUtil.java">Original method | Github</a>
          *
          * @author lucka-me
-         * @since 0.1.4
+         * @since 0.1.0
          */
         fun fixCoordinate(location: Location): Location {
-            // 避免二次修正
+            // Avoid fixing redundantly
             if (location.provider == FIXED_PROVIDER) return Location(location)
             val origLat = location.latitude
             val origLng = location.longitude
-            // 不在国内不做转换
+            // Avoid fix when the location is oversea
             if ((origLng < 72.004 || origLng > 137.8347) ||
                 (origLat < 0.8293 || origLat > 55.8271)
             ) {
@@ -424,9 +411,43 @@ class LocationKit(
         }
 
         /**
-         * 显示请求权限对话框
+         * Request location permission.
          *
-         * @param [activity] MainActivity
+         * @param [activity] Activity of the application
+         * @param [requestCode] Request code for Request Permissions Result Callback
+         *
+         * @return If the permission is denied before and needs a explanation
+         *
+         * @author lucka-me
+         * @since 0.1.5
+         */
+        fun requestPermission(activity: MainActivity, requestCode: Int): Boolean {
+            if (ActivityCompat
+                    .checkSelfPermission(activity, Manifest.permission.ACCESS_FINE_LOCATION) !=
+                PackageManager.PERMISSION_GRANTED
+            ) {
+                // Explain if permission denied before
+                if (ActivityCompat.shouldShowRequestPermissionRationale(
+                        activity,
+                        Manifest.permission.ACCESS_FINE_LOCATION
+                    )
+                ) {
+                    return true
+                } else {
+                    ActivityCompat.requestPermissions(
+                        activity,
+                        arrayOf(Manifest.permission.ACCESS_FINE_LOCATION),
+                        requestCode
+                    )
+                }
+            }
+            return false
+        }
+
+        /**
+         * Show the explanation dialog for location permission
+         *
+         * @param [activity] Activity to show the dialog
          *
          * @author lucka-me
          * @since 0.3.8
@@ -436,10 +457,12 @@ class LocationKit(
                 activity,
                 R.string.permission_request_title,
                 R.string.permission_explain_location,
-                positiveButtonTextId = R.string.confirm,
                 negativeButtonTextId = R.string.permission_system_settings,
                 negativeButtonListener = { _, _ ->
-                    activity.startActivity(Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS))
+                    activity.startActivity(Intent(
+                        Settings.ACTION_APPLICATION_DETAILS_SETTINGS,
+                        Uri.fromParts("package", activity.packageName, null)
+                    ))
                 },
                 cancelable = false
             )

@@ -6,11 +6,11 @@ import android.content.pm.PackageManager
 import android.location.Location
 import android.os.Build
 import android.os.Bundle
+import android.os.Process
 import android.provider.Settings
 import android.support.v4.content.ContextCompat
 import android.support.v4.graphics.drawable.DrawableCompat
 import android.support.v7.app.AppCompatActivity
-import android.util.Log
 import android.view.View
 import android.widget.Toast
 import kotlinx.android.synthetic.main.activity_main.*
@@ -91,10 +91,16 @@ class MainActivity : AppCompatActivity() {
             }
 
             override fun onException(error: Exception) {
-                if (error.message == getString(R.string.err_location_permission_denied)) {
-                    LocationKit.showRequestPermissionDialog(this@MainActivity)
-                } else {
-                    DialogKit.showSimpleAlert(this@MainActivity, error.message)
+                when (error.message) {
+
+                    getString(R.string.err_location_permission_denied) -> {
+                        LocationKit.showRequestPermissionDialog(this@MainActivity)
+                    }
+
+                    else -> {
+                        DialogKit.showSimpleAlert(this@MainActivity, error.message)
+                    }
+
                 }
             }
     }
@@ -120,7 +126,13 @@ class MainActivity : AppCompatActivity() {
                 }
                 if (missionManager.data.sequential &&
                     missionManager.data.checked < missionManager.checkPointList.size
-                ) mapKit.changeMarkerIconAt(missionManager.data.checked, MapKit.MarkerType.Next)
+                ) {
+                    mapKit.changeMarkerIconAt(missionManager.data.checked, MapKit.MarkerType.Next)
+                    mapKit.changeMarkerIconAt(
+                        missionManager.checkPointList.size - 1,
+                        MapKit.MarkerType.Final
+                    )
+                }
                 mapKit.resetZoomAndCenter(missionManager.checkPointList)
                 // Update Progress Bar
                 progressBar.isIndeterminate = false
@@ -165,8 +177,10 @@ class MainActivity : AppCompatActivity() {
                     mapKit.changeMarkerIconAt(index, MapKit.MarkerType.Checked)
                 }
                 if (missionManager.data.sequential &&
-                    missionManager.data.checked < missionManager.checkPointList.size
-                ) mapKit.changeMarkerIconAt(missionManager.data.checked, MapKit.MarkerType.Next)
+                    missionManager.data.checked < missionManager.checkPointList.size - 1
+                ) {
+                    mapKit.changeMarkerIconAt(missionManager.data.checked, MapKit.MarkerType.Next)
+                }
 
                 val icon = getDrawable(R.drawable.ic_check)
                 DrawableCompat.setTint(
@@ -259,13 +273,28 @@ class MainActivity : AppCompatActivity() {
             Intent(this, BackgroundMissionService::class.java)
         stopService(backgroundMissionService)
 
+        // Check emulator
+        if (TrumeKit.checkEmulator()) {
+            DialogKit.showDialog(
+                this,
+                R.string.alert_title,
+                R.string.err_emulator_detected,
+                positiveButtonTextId = R.string.confirm,
+                positiveButtonListener = { _, _ ->
+                    // Exit the app
+                    Process.killProcess(Process.myPid())
+                    System.exit(0)
+                },
+                cancelable = false
+            )
+        }
 
         // Initialize Dashboard
         dashboard = Dashboard(this, missionManager)
 
         // Handle the location and permissions
         locationKit = LocationKit(this, locationKitListener)
-        if (locationKit.requestPermission(this, AppRequest.PermissionLocation.code)) {
+        if (LocationKit.requestPermission(this, AppRequest.PermissionLocation.code)) {
             LocationKit.showRequestPermissionDialog(this)
         }
 
@@ -319,8 +348,7 @@ class MainActivity : AppCompatActivity() {
         buttonPreference.setOnClickListener {
             when(missionManager.state) {
                 MissionManager.MissionState.Started, MissionManager.MissionState.Stopped -> {
-                    val intent = Intent(this, PreferenceMainActivity::class.java)
-                    startActivity(intent)
+                    startActivity(Intent(this, PreferenceMainActivity::class.java))
                 }
                 else -> {
 
@@ -340,7 +368,6 @@ class MainActivity : AppCompatActivity() {
     }
 
     override fun onPause() {
-        Log.i("TESTRO MA", "onPause()")
         locationKit.stopUpdate()
         missionManager.pause()
         if (missionManager.state == MissionManager.MissionState.Paused) {
@@ -358,47 +385,16 @@ class MainActivity : AppCompatActivity() {
     }
 
     override fun onResume() {
-        Log.i("TESTRO MA", "onResume()")
         if (missionManager.state == MissionManager.MissionState.Paused) {
             // Stop the background service
             val backgroundMissionService =
                 Intent(this, BackgroundMissionService::class.java)
-            if(stopService(backgroundMissionService)) {
-
-            } else {
-                Log.i("TESTRO MA", "没找到后台服务")
-            }
+            stopService(backgroundMissionService)
 
             missionManager.resume()
         }
         locationKit.startUpdate()
         super.onResume()
-    }
-
-    override fun onDestroy() {
-        Log.i("TESTRO MA", "onDestroy()")
-        super.onDestroy()
-    }
-
-    override fun onBackPressed() {
-        Log.i("TESTRO MA", "按下后退键")
-        super.onBackPressed()
-        // Alert user when mission is not stop because this will stop the app
-        /*
-        if (missionManager.state != MissionManager.MissionState.Stopped) {
-            DialogKit.showDialog(
-                this,
-                R.string.alert_title,
-                R.string.alert_exit_when_mission_not_stopped,
-                positiveButtonListener = { dialog, _ ->
-                    dialog.dismiss()
-                    super.onBackPressed()
-                },
-                negativeButtonTextId = R.string.cancel
-                )
-        } else {
-            super.onBackPressed()
-        }*/
     }
 
     // Handle the activity result
@@ -432,11 +428,9 @@ class MainActivity : AppCompatActivity() {
         when (requestCode) {
             AppRequest.PermissionLocation.code -> {
                 if (grantResults.isNotEmpty() &&
-                    grantResults[0] == PackageManager.PERMISSION_GRANTED
+                    grantResults[0] != PackageManager.PERMISSION_GRANTED
                 ) {
-                    locationKit.startUpdate()
-                } else {
-                    locationKit.requestPermission(this, requestCode)
+                    LocationKit.requestPermission(this, requestCode)
                 }
             }
         }

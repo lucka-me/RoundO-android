@@ -1,6 +1,15 @@
 <h1 align=center>更新日志</h1>
 
 ```markdown
+## [0.3.12] - 2018-09-01
+- 0.3.11(920) -> 0.3.12(928)
+- New marker: Final
+
+### Finished
+- Final merker for the last check point in sequential mission
+```
+
+```markdown
 ## [0.3.11] - 2018-08-29
 - 0.3.10(905) -> 0.3.11(920)
 - Feature: Customize Center

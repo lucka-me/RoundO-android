@@ -62,7 +62,7 @@ import java.util.*
  * @property [notificationId] 通知 ID
  * @property [providerDisabledNotificationId] 定位不可用时发出的通知的 ID，用于在定位可用后自动取消通知
  */
-class BackgroundMissionService : Service() {
+class  BackgroundMissionService : Service() {
 
     private var missionData: MissionManager.MissionData = MissionManager.MissionData()
     private var startTime = Date()
