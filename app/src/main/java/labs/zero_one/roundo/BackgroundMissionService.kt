@@ -118,7 +118,7 @@ class  BackgroundMissionService : Service() {
                                 Intent(this@BackgroundMissionService, MainActivity::class.java),
                                 0
                             ))
-                            .setSmallIcon(R.drawable.ic_check)
+                            .setSmallIcon(R.drawable.ic_notification)
                             .build()
                     )
                     notificationId++
@@ -200,7 +200,7 @@ class  BackgroundMissionService : Service() {
                     Intent(this, MainActivity::class.java),
                     0
                 ))
-                .setSmallIcon(R.drawable.ic_launcher_foreground)
+                .setSmallIcon(R.drawable.ic_notification)
                 .build()
         )
 

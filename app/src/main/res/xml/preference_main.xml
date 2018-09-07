@@ -5,7 +5,6 @@
     <PreferenceCategory
         android:title="@string/pref_display_category_title">
 
-
         <SwitchPreference
             android:key="@string/pref_display_show_second_key"
             android:title="@string/pref_display_show_second_title"

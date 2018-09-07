@@ -1,6 +1,15 @@
 <h1 align=center>更新日志</h1>
 
 ```markdown
+## [0.3.14] - 2018-09-07
+- 0.3.13(938) -> 0.3.14(947)
+- New notification icon
+
+### Finished
+- Notification icon
+```
+
+```markdown
 ## [0.3.13] - 2018-09-01
 - 0.3.12(928) -> 0.3.13(938)
 - UI improved
