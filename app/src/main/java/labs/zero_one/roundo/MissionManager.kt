@@ -442,7 +442,7 @@ class MissionManager(private var context: Context, private val missionListener: 
                 data.checked += newCheckedIndexList.size
                 totalCheckedCount = data.checked
             } else {
-                for (i: Int in data.checked until checkPointList.size) {
+                for (i: Int in 0 until checkPointList.size) {
                     if (!checkPointList[i].checked &&
                         location.distanceTo(checkPointList[i].location) < 40
                     ) {

@@ -1,6 +1,15 @@
 <h1 align=center>更新日志</h1>
 
 ```markdown
+## [0.3.15] - 2018-09-09
+- 0.3.14(947) -> 0.2.15(952)
+- Bugs fixed
+
+### Fixed
+- Some waypoints way be uncheckable in non-sequential mission
+```
+
+```markdown
 ## [0.3.14] - 2018-09-07
 - 0.3.13(938) -> 0.3.14(947)
 - New notification icon
